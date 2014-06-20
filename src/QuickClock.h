@@ -31,6 +31,8 @@
 #ifndef QUICK_CLOCK_H
 #define QUICK_CLOCK_H
 
+#include "ClockSettings.h"
+
 #include <QQuickPaintedItem>
 #include <QPixmap>
 #include <QDateTime>
@@ -38,28 +40,29 @@
 class QuickClock: public QQuickPaintedItem
 {
     Q_OBJECT
-    Q_PROPERTY(bool background READ background WRITE setBackground NOTIFY backgroundChanged)
-    Q_PROPERTY(bool invert READ invert WRITE setInvert NOTIFY invertChanged)
+    Q_PROPERTY(bool drawBackground READ drawBackground WRITE setDrawBackground NOTIFY drawBackgroundChanged)
+    Q_PROPERTY(ClockSettings* settings READ settings WRITE setSettings NOTIFY settingsChanged)
 
 public:
     explicit QuickClock(QQuickItem* aParent = NULL);
     ~QuickClock();
 
-    bool background() const { return iDrawBackground; }
-    void setBackground(bool aValue);
+    ClockSettings* settings() const { return iSettings; }
+    void setSettings(ClockSettings* aSettings);
 
-    bool invert() const { return iInvertColors; }
-    void setInvert(bool aValue);
+    bool drawBackground() const { return iDrawBackground; }
+    void setDrawBackground(bool aValue);
 
 signals:
-    void invertChanged(bool aValue);
-    void backgroundChanged(bool aValue);
+    void drawBackgroundChanged(bool aValue);
+    void settingsChanged(ClockSettings* aValue);
 
 protected:
     virtual void paint(QPainter* aPainter);
     virtual void timerEvent(QTimerEvent* aEvent);
 
 private:
+    void invalidPixmaps();
     void updateColors();
     void setRunning(bool aRunning);
     void paintDialPlate(const QSize& aSize);
@@ -73,6 +76,7 @@ private:
 
 private slots:
     void onDisplayStatusChanged(QString);
+    void onInvertColorsChanged(bool);
 
 private:
     QColor iBackgroundColor;
@@ -80,7 +84,7 @@ private:
     QColor iArmShadowColor1;
     QColor iArmShadowColor2;
     bool iDrawBackground;
-    bool iInvertColors;
+    ClockSettings* iSettings;
     QPixmap* iDialPlate;
     QPixmap* iOffScreenNoSec;   // Everything except seconds
     QTime iPaintTimeNoSec;      // When iOffScreenNoSec was painted

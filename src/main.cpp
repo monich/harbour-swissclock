@@ -29,6 +29,7 @@
 */
 
 #include "QuickClock.h"
+#include "ClockSettings.h"
 
 #include <QtGui>
 #include <QtQuick>
@@ -40,6 +41,7 @@ int main(int argc, char *argv[])
     QGuiApplication* app = SailfishApp::application(argc, argv);
 
     qmlRegisterType<QuickClock>("harbour.swissclock", 1, 0, "Clock");
+    qmlRegisterType<ClockSettings>("harbour.swissclock", 1, 0, "ClockSettings");
 
     QQuickView *view = SailfishApp::createView();
     view->setSource(SailfishApp::pathTo(QString("qml/main.qml")));

@@ -28,16 +28,61 @@
   SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-import QtQuick 2.0
-import Sailfish.Silica 1.0
-import harbour.swissclock 1.0
+#include "ClockSettings.h"
+#include "ClockDebug.h"
 
-CoverBackground {
-    Clock {
-        id: clock
-        drawBackground: false
-        anchors.centerIn: parent
-        width: parent.width - 2*Theme.paddingMedium
-        height: width
+#define SETTINGS_GROUP "Configuration"
+#define SETTING_KEY_SHOW_NUMBERS "showNumbers"
+#define SETTING_KEY_INVERT_COLORS "invertColors"
+
+ClockSettings::ClockSettings(QObject* aParent) :
+    QObject(aParent),
+    iShowNumbers(false),
+    iInvertColors(false)
+{
+    QTRACE("- created");
+    QSettings settings;
+    settings.beginGroup(SETTINGS_GROUP);
+    queryBool(&settings, SETTING_KEY_SHOW_NUMBERS, &iShowNumbers);
+    queryBool(&settings, SETTING_KEY_INVERT_COLORS, &iInvertColors);
+}
+
+ClockSettings::~ClockSettings()
+{
+    QTRACE("- destroyed");
+}
+
+bool ClockSettings::queryBool(QSettings* aSettings, QString aKey, bool* aValue)
+{
+    if (aSettings->contains(aKey)) {
+        QVariant value = aSettings->value(aKey);
+        QTRACE("-" << aKey << "=" << value.toBool());
+        if (aValue) *aValue = value.toBool();
+        return true;
+    }
+    return false;
+}
+
+void ClockSettings::setShowNumbers(bool aValue)
+{
+    if (iShowNumbers != aValue) {
+        iShowNumbers = aValue;
+        QTRACE("-" << SETTING_KEY_SHOW_NUMBERS << "=" << aValue);
+        showNumbersChanged(aValue);
+        QSettings settings;
+        settings.beginGroup(SETTINGS_GROUP);
+        settings.setValue(SETTING_KEY_SHOW_NUMBERS, aValue);
+    }
+}
+
+void ClockSettings::setInvertColors(bool aValue)
+{
+    if (iInvertColors != aValue) {
+        iInvertColors = aValue;
+        QTRACE("-" << SETTING_KEY_INVERT_COLORS << "=" << aValue);
+        invertColorsChanged(aValue);
+        QSettings settings;
+        settings.beginGroup(SETTINGS_GROUP);
+        settings.setValue(SETTING_KEY_INVERT_COLORS, aValue);
     }
 }

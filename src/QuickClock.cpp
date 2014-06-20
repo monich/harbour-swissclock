@@ -36,10 +36,13 @@
 
 #define SUPER QQuickPaintedItem
 
+#define SETTING_INVERT_COLORS "invertColors"
+#define SETTING_DRAW_BACKGROUND "drawBackground"
+
 QuickClock::QuickClock(QQuickItem* aParent) :
     SUPER(),
     iDrawBackground(true),
-    iInvertColors(false),
+    iSettings(NULL),
     iDialPlate(NULL),
     iOffScreenNoSec(NULL),
     iTimerId(0)
@@ -63,44 +66,47 @@ QuickClock::~QuickClock()
     if (iOffScreenNoSec) delete iOffScreenNoSec;
 }
 
-void QuickClock::setInvert(bool aValue)
+void QuickClock::invalidPixmaps()
 {
-    if (iInvertColors != aValue) {
-        iInvertColors = aValue;
-        if (iDialPlate) {
-            delete iDialPlate;
-            iDialPlate = NULL;
-        }
-        if (iOffScreenNoSec) {
-            delete iOffScreenNoSec;
-            iOffScreenNoSec = NULL;
-        }
-        updateColors();
-        invertChanged(aValue);
+    if (iDialPlate) {
+        delete iDialPlate;
+        iDialPlate = NULL;
+    }
+    if (iOffScreenNoSec) {
+        delete iOffScreenNoSec;
+        iOffScreenNoSec = NULL;
+    }
+}
+
+void QuickClock::setDrawBackground(bool aValue)
+{
+    if (iDrawBackground != aValue) {
+        iDrawBackground = aValue;
+        invalidPixmaps();
+        drawBackgroundChanged(aValue);
         update();
     }
 }
 
-void QuickClock::setBackground(bool aValue)
+void QuickClock::setSettings(ClockSettings* aSettings)
 {
-    if (iDrawBackground != aValue) {
-        iDrawBackground = aValue;
-        if (iDialPlate) {
-            delete iDialPlate;
-            iDialPlate = NULL;
+    if (iSettings != aSettings) {
+        if (iSettings) iSettings->disconnect(this);
+        iSettings = aSettings;
+        if (iSettings) {
+            connect(iSettings,SIGNAL(invertColorsChanged(bool)),
+                SLOT(onInvertColorsChanged(bool)));
         }
-        if (iOffScreenNoSec) {
-            delete iOffScreenNoSec;
-            iOffScreenNoSec = NULL;
-        }
-        backgroundChanged(aValue);
+        settingsChanged(iSettings);
+        invalidPixmaps();
+        updateColors();
         update();
     }
 }
 
 void QuickClock::updateColors()
 {
-    if (iInvertColors) {
+    if (iSettings && iSettings->invertColors()) {
         iBackgroundColor.setRgb(228,228,228);
         iHourMinArmColor.setRgb(43,43,43);
         iArmShadowColor1.setRgb(228,228,228,0x40);
@@ -111,6 +117,13 @@ void QuickClock::updateColors()
         iArmShadowColor1.setRgb(43,43,43,0x80);
         iArmShadowColor2.setRgb(43,43,43,0x40);
     }
+}
+
+void QuickClock::onInvertColorsChanged(bool aValue)
+{
+    invalidPixmaps();
+    updateColors();
+    update();
 }
 
 void QuickClock::onDisplayStatusChanged(QString aStatus)

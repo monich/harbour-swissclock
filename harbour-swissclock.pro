@@ -9,10 +9,12 @@ CONFIG(debug, debug|release) {
 
 SOURCES += \
     src/main.cpp \
+    src/ClockSettings.cpp \
     src/QuickClock.cpp
 
 HEADERS += \
     src/ClockDebug.h \
+    src/ClockSettings.h \
     src/QuickClock.h
 
 OTHER_FILES += \

@@ -28,16 +28,40 @@
   SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-import QtQuick 2.0
-import Sailfish.Silica 1.0
-import harbour.swissclock 1.0
+#ifndef CLOCK_SETTINGS_H
+#define CLOCK_SETTINGS_H
 
-CoverBackground {
-    Clock {
-        id: clock
-        drawBackground: false
-        anchors.centerIn: parent
-        width: parent.width - 2*Theme.paddingMedium
-        height: width
-    }
-}
+#include <QSettings>
+#include <QtQml>
+
+class ClockSettings : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(bool showNumbers READ showNumbers WRITE setShowNumbers NOTIFY showNumbersChanged)
+    Q_PROPERTY(bool invertColors READ invertColors WRITE setInvertColors NOTIFY invertColorsChanged)
+
+public:
+    explicit ClockSettings(QObject* aParent = NULL);
+    ~ClockSettings();
+
+    bool showNumbers() const { return iShowNumbers; }
+    bool invertColors() const { return iInvertColors; }
+
+    void setShowNumbers(bool aValue);
+    void setInvertColors(bool aValue);
+
+private:
+    bool queryBool(QSettings* aSettings, QString aKey, bool* aValue);
+
+signals:
+    void showNumbersChanged(bool);
+    void invertColorsChanged(bool);
+
+private:
+    bool iShowNumbers;
+    bool iInvertColors;
+};
+
+QML_DECLARE_TYPE(ClockSettings)
+
+#endif // CLOCK_SETTINGS_H

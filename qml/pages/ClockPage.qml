@@ -34,12 +34,15 @@ import harbour.swissclock 1.0
 
 Page {
     id: page
-    property bool showLabels: false
     allowedOrientations: window.allowedOrientations
+
+    ClockSettings {
+        id: settings
+    }
 
     MouseArea {
         anchors.fill: parent
-        onClicked: page.showLabels = !page.showLabels
+        onClicked: settings.showNumbers = !settings.showNumbers
         onPressAndHold: { /* ignore long taps */ }
     }
 
@@ -73,12 +76,13 @@ Page {
                     Clock {
                         id: clock
                         anchors.fill: parent
+                        settings: settings
                     }
                     MouseArea {
                         anchors.fill: parent
                         onClicked: mouse.accepted = true
                         onDoubleClicked: {
-                            clock.invert = !clock.invert
+                            settings.invertColors = !settings.invertColors
                             mouse.accepted = true
                         }
                     }
@@ -103,7 +107,7 @@ Page {
     states: [
         State {
             name: "show"
-            when: page.showLabels
+            when: settings.showNumbers
             PropertyChanges { target: label1; opacity: 1 }
             PropertyChanges { target: label2; opacity: 1 }
             PropertyChanges { target: label3; opacity: 1 }
@@ -111,7 +115,7 @@ Page {
         },
         State {
             name: "hide"
-            when: !page.showLabels
+            when: !settings.showNumbers
             PropertyChanges { target: label1; opacity: 0 }
             PropertyChanges { target: label2; opacity: 0 }
             PropertyChanges { target: label3; opacity: 0 }
