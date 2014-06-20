@@ -90,7 +90,7 @@ private:
     QTime iPaintTimeNoSec;      // When iOffScreenNoSec was painted
     int iTimerId;
 
-#define CLOCK_PERFORMANCE_LOG 1
+#define CLOCK_PERFORMANCE_LOG 0
 #if CLOCK_PERFORMANCE_LOG
     QDateTime iStartTime;
     int iRenderCount;
