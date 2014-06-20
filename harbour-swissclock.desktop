@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+X-Nemo-Application-Type=silica-qt5
+Name=Swiss Clock
+#Name[ru]=Часики
+Icon=harbour-swissclock
+Exec=harbour-swissclock
