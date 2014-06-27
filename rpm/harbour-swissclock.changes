@@ -1,2 +1,5 @@
+* Fri Jun 27 2014 Slava Monich <slava.monich@jolla.com> 1.0.1
+- Fixed corrupted background (hopefully)
+
 * Fri Jun 20 2014 Slava Monich <slava.monich@jolla.com> 1.0.0
 - Initial version
