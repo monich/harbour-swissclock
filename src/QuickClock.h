@@ -66,7 +66,6 @@ private:
     void updateColors();
     void setRunning(bool aRunning);
     void paintDialPlate(const QSize& aSize);
-    void paintOffScreenNoSec(const QSize& aSize, const QTime& aTime);
     void paintOffScreenNoSec(QPainter* aPainter, const QSize& aSize,
          const QTime& aTime);
     qreal dialPlateSize() const { return qMin(width(),height()); }

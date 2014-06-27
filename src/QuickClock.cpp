@@ -163,6 +163,8 @@ void QuickClock::paintDialPlate(const QSize& aSize)
         QPainter painter(iDialPlate);
         painter.setRenderHint(QPainter::Antialiasing);
         painter.setRenderHint(QPainter::HighQualityAntialiasing);
+        painter.setCompositionMode(QPainter::CompositionMode_Source);
+        painter.fillRect(rect, QBrush(Qt::transparent));
         painter.translate(rect.center());
 
         QPointF center(0,0);
@@ -214,24 +216,6 @@ void QuickClock::paintSimpleHand(
 }
 
 void QuickClock::paintOffScreenNoSec(
-    const QSize& aSize,
-    const QTime& aTime)
-{
-    QTRACE("- drawing hour and minute arms");
-
-    if (!iOffScreenNoSec || iOffScreenNoSec->size() != aSize) {
-        if (iOffScreenNoSec) delete iOffScreenNoSec;
-        iOffScreenNoSec = new QPixmap(aSize);
-    }
-
-    QPainter painter(iOffScreenNoSec);
-    painter.setRenderHint(QPainter::Antialiasing);
-    painter.setRenderHint(QPainter::HighQualityAntialiasing);
-    paintOffScreenNoSec(&painter, aSize, aTime);
-    iPaintTimeNoSec = aTime;
-}
-
-void QuickClock::paintOffScreenNoSec(
     QPainter* aPainter,
     const QSize& aSize,
     const QTime& aTime)
@@ -251,6 +235,8 @@ void QuickClock::paintOffScreenNoSec(
     QBrush shadowBrush1(iArmShadowColor1);
     QBrush shadowBrush2(iArmShadowColor2);
 
+    QTRACE("- drawing hour and minute arms");
+
     qreal hourAngle = 30.0 * ((aTime.hour() + aTime.minute()/60.0)) - 90;
     qreal minAngle;
     if (aTime.second()) {
@@ -263,8 +249,6 @@ void QuickClock::paintOffScreenNoSec(
     QRectF rect(QPoint(0,0), aSize);
     paintDialPlate(aSize);
     aPainter->save();
-    aPainter->setCompositionMode(QPainter::CompositionMode_Source);
-    aPainter->fillRect(rect, QBrush(Qt::transparent));
     aPainter->drawPixmap(0, 0, *iDialPlate);
     aPainter->translate(rect.center());
     aPainter->setPen(iHourMinArmColor);
@@ -291,10 +275,23 @@ void QuickClock::paint(QPainter* aPainter)
     if (time.second() == 0) {
         paintOffScreenNoSec(aPainter, size, time);
     } else {
-        if (!iOffScreenNoSec || iOffScreenNoSec->size() != size ||
+        if (iOffScreenNoSec == NULL ||
+            iOffScreenNoSec->size() != size ||
             time.minute() != iPaintTimeNoSec.minute() ||
             time.hour() != iPaintTimeNoSec.hour()) {
-            paintOffScreenNoSec(size, time);
+
+            if (iOffScreenNoSec) delete iOffScreenNoSec;
+            iOffScreenNoSec = new QPixmap(size);
+
+            QPainter painter(iOffScreenNoSec);
+            painter.setRenderHint(QPainter::Antialiasing);
+            painter.setRenderHint(QPainter::HighQualityAntialiasing);
+            painter.setCompositionMode(QPainter::CompositionMode_Source);
+            painter.fillRect(backRect, QBrush(Qt::transparent));
+
+            paintOffScreenNoSec(&painter, size, time);
+
+            iPaintTimeNoSec = time;
         }
         aPainter->drawPixmap(0, 0, *iOffScreenNoSec);
     }
