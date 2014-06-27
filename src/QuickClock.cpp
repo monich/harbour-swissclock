@@ -175,22 +175,6 @@ void QuickClock::paintDialPlate(const QSize& aSize)
             painter.drawEllipse(center, d/2, d/2);
         }
 
-#if 0
-        // Flag
-        painter.save();
-        const qreal f = d/50;
-        const qreal wf = 7*f;
-        const qreal hf = 5*f;
-        painter.translate(-wf/2, -d/4 + hf/2);
-        QColor flagColor1(145,60,53);
-        QColor flagColor2(166,166,166);
-        painter.setPen(Qt::NoPen);
-        painter.fillRect(QRectF(0,0,7*f,5*f), QBrush(flagColor1));
-        painter.fillRect(QRectF(2*f,2*f,3*f,f), QBrush(flagColor2));
-        painter.fillRect(QRectF(3*f,f,f,3*f), QBrush(flagColor2));
-        painter.restore();
-#endif
-
         const qreal y = d / 50;
         const qreal y1 = qMax((qreal)1, d / 158);
         const qreal x1 = d * 10 / 27;
