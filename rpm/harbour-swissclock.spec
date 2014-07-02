@@ -8,8 +8,8 @@ Summary:    Swiss Clock
 Version:    1.0.1
 Release:    1
 Group:      Qt/Qt
-License:    GPLv3
-URL:        http://jolla.com/
+License:    BSD
+URL:        https://github.com/monich/harbour-swissclock
 Source0:    %{name}-%{version}.tar.bz2
 
 Requires:      sailfishsilica-qt5 >= 0.10.9
@@ -46,5 +46,8 @@ desktop-file-install --delete-original \
 %{_datadir}/icons/hicolor/86x86/apps/%{name}.png
 
 %changelog
+* Fri Jun 27 2014 Slava Monich <slava.monich@jolla.com> 1.0.1
+- Fixed corrupted background (hopefully)
+
 * Fri Jun 13 2014 Slava Monich <slava.monich@jolla.com> 1.0.0
 - Initial version
