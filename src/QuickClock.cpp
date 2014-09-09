@@ -46,7 +46,7 @@
 #define MCE_SERVICE "com.nokia.mce"
 
 QuickClock::QuickClock(QQuickItem* aParent) :
-    SUPER(),
+    SUPER(aParent),
     iDrawBackground(true),
     iSettings(NULL),
     iDialPlate(NULL),
