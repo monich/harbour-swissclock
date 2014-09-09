@@ -37,6 +37,8 @@
 #include <QPixmap>
 #include <QDateTime>
 
+class QDBusPendingCallWatcher;
+
 class QuickClock: public QQuickPaintedItem
 {
     Q_OBJECT
@@ -65,6 +67,7 @@ private:
     void invalidPixmaps();
     void updateColors();
     void setRunning(bool aRunning);
+    void setDisplayStatus(QString aStatus) { setRunning(aStatus != "off"); }
     void paintDialPlate(const QSize& aSize);
     void paintOffScreenNoSec(QPainter* aPainter, const QSize& aSize,
          const QTime& aTime);
@@ -75,6 +78,7 @@ private:
 
 private slots:
     void onDisplayStatusChanged(QString);
+    void onDisplayStatusQueryDone(QDBusPendingCallWatcher*);
     void onInvertColorsChanged(bool);
 
 private:

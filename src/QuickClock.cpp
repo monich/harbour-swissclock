@@ -31,13 +31,19 @@
 #include "QuickClock.h"
 #include "ClockDebug.h"
 
+#include <QDBusMessage>
 #include <QDBusConnection>
+#include <QDBusPendingCall>
+#include <QDBusPendingCallWatcher>
+#include <QDBusPendingReply>
 #include <QPainter>
 
 #define SUPER QQuickPaintedItem
 
 #define SETTING_INVERT_COLORS "invertColors"
 #define SETTING_DRAW_BACKGROUND "drawBackground"
+
+#define MCE_SERVICE "com.nokia.mce"
 
 QuickClock::QuickClock(QQuickItem* aParent) :
     SUPER(),
@@ -54,9 +60,20 @@ QuickClock::QuickClock(QQuickItem* aParent) :
     iStartTime = QDateTime::currentDateTime();
 #endif // CLOCK_PERFORMANCE_LOG
     setRunning(true);
-    QDBusConnection::systemBus().connect("com.nokia.mce",
+
+    // Listen for MCE display state change signals
+    QDBusConnection systemBus(QDBusConnection::systemBus());
+    systemBus.connect(MCE_SERVICE,
          "/com/nokia/mce/signal", "com.nokia.mce.signal",
          "display_status_ind", this, SLOT(onDisplayStatusChanged(QString)));
+
+    // And query the current state although it's rather unlikely that we
+    // have been started with display off
+    connect(new QDBusPendingCallWatcher(systemBus.asyncCall(
+        QDBusMessage::createMethodCall(MCE_SERVICE,
+        "/com/nokia/mce/request", "com.nokia.mce.request",
+        "get_display_status")), this), SIGNAL(finished(QDBusPendingCallWatcher*)),
+        this, SLOT(onDisplayStatusQueryDone(QDBusPendingCallWatcher*)));
 }
 
 QuickClock::~QuickClock()
@@ -129,7 +146,17 @@ void QuickClock::onInvertColorsChanged(bool aValue)
 void QuickClock::onDisplayStatusChanged(QString aStatus)
 {
     QTRACE("-" << aStatus);
-    setRunning(aStatus != "off");
+    setDisplayStatus(aStatus);
+}
+
+void QuickClock::onDisplayStatusQueryDone(QDBusPendingCallWatcher* aWatcher)
+{
+    QDBusPendingReply<QString> reply(*aWatcher);
+    QTRACE("-" << reply);
+    if (reply.isValid() && !reply.isError()) {
+        setDisplayStatus(reply.value());
+    }
+    aWatcher->deleteLater();
 }
 
 void QuickClock::timerEvent(QTimerEvent* aEvent)
