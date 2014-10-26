@@ -31,20 +31,43 @@
 #include "ClockSettings.h"
 #include "ClockDebug.h"
 
-#define SETTINGS_GROUP "Configuration"
-#define SETTING_KEY_SHOW_NUMBERS "showNumbers"
-#define SETTING_KEY_INVERT_COLORS "invertColors"
+#include <MGConfItem>
+#include <QSettings>
+
+#define SETTINGS_GROUP          "Configuration/"
+#define DCONF_PATH              "/apps/harbour-swissclock/"
+#define KEY_SHOW_NUMBERS        "showNumbers"
+#define KEY_INVERT_COLORS       "invertColors"
+
+#define SETTINGS_SHOW_NUMBERS   SETTINGS_GROUP KEY_SHOW_NUMBERS
+#define SETTINGS_INVERT_COLORS  SETTINGS_GROUP KEY_INVERT_COLORS
+#define DEFAULT_SHOW_NUMBERS    false
+#define DEFAULT_INVERT_COLORS   false
 
 ClockSettings::ClockSettings(QObject* aParent) :
     QObject(aParent),
-    iShowNumbers(false),
-    iInvertColors(false)
+    iShowNumbers(new MGConfItem(DCONF_PATH KEY_SHOW_NUMBERS, this)),
+    iInvertColors(new MGConfItem(DCONF_PATH KEY_INVERT_COLORS, this))
 {
     QTRACE("- created");
+
+    // Pull in settings from the .ini file
     QSettings settings;
-    settings.beginGroup(SETTINGS_GROUP);
-    queryBool(&settings, SETTING_KEY_SHOW_NUMBERS, &iShowNumbers);
-    queryBool(&settings, SETTING_KEY_INVERT_COLORS, &iInvertColors);
+    if (settings.contains(SETTINGS_SHOW_NUMBERS)) {
+        bool value = settings.value(SETTINGS_SHOW_NUMBERS).toBool();
+        QTRACE("- importing " SETTINGS_SHOW_NUMBERS ":" << value);
+        iShowNumbers->set(value);
+    }
+    if (settings.contains(SETTINGS_INVERT_COLORS)) {
+        bool value = settings.value(SETTINGS_INVERT_COLORS).toBool();
+        QTRACE("- importing " SETTINGS_INVERT_COLORS ":" << value);
+        iInvertColors->set(value);
+    }
+    settings.remove("");
+    settings.sync();
+
+    connect(iShowNumbers, SIGNAL(valueChanged()), SIGNAL(showNumbersChanged()));
+    connect(iInvertColors, SIGNAL(valueChanged()), SIGNAL(invertColorsChanged()));
 }
 
 ClockSettings::~ClockSettings()
@@ -52,37 +75,24 @@ ClockSettings::~ClockSettings()
     QTRACE("- destroyed");
 }
 
-bool ClockSettings::queryBool(QSettings* aSettings, QString aKey, bool* aValue)
+bool ClockSettings::showNumbers() const
 {
-    if (aSettings->contains(aKey)) {
-        QVariant value = aSettings->value(aKey);
-        QTRACE("-" << aKey << "=" << value.toBool());
-        if (aValue) *aValue = value.toBool();
-        return true;
-    }
-    return false;
+    return iShowNumbers->value(DEFAULT_SHOW_NUMBERS).toBool();
+}
+
+bool ClockSettings::invertColors() const
+{
+    return iInvertColors->value(DEFAULT_INVERT_COLORS).toBool();
 }
 
 void ClockSettings::setShowNumbers(bool aValue)
 {
-    if (iShowNumbers != aValue) {
-        iShowNumbers = aValue;
-        QTRACE("-" << SETTING_KEY_SHOW_NUMBERS << "=" << aValue);
-        showNumbersChanged(aValue);
-        QSettings settings;
-        settings.beginGroup(SETTINGS_GROUP);
-        settings.setValue(SETTING_KEY_SHOW_NUMBERS, aValue);
-    }
+    QTRACE("-" << KEY_SHOW_NUMBERS << "=" << aValue);
+    iShowNumbers->set(aValue);
 }
 
 void ClockSettings::setInvertColors(bool aValue)
 {
-    if (iInvertColors != aValue) {
-        iInvertColors = aValue;
-        QTRACE("-" << SETTING_KEY_INVERT_COLORS << "=" << aValue);
-        invertColorsChanged(aValue);
-        QSettings settings;
-        settings.beginGroup(SETTINGS_GROUP);
-        settings.setValue(SETTING_KEY_INVERT_COLORS, aValue);
-    }
+    QTRACE("-" << KEY_INVERT_COLORS << "=" << aValue);
+    iInvertColors->set(aValue);
 }

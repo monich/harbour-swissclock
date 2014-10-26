@@ -1,5 +1,7 @@
 TARGET = harbour-swissclock
 CONFIG += sailfishapp
+CONFIG += link_pkgconfig
+PKGCONFIG += mlite5 sailfishapp
 QMAKE_CXXFLAGS += -Wno-unused-parameter
 QT += dbus
 
@@ -25,5 +27,3 @@ OTHER_FILES += \
     harbour-swissclock.desktop \
     rpm/harbour-swissclock.changes \
     rpm/harbour-swissclock.spec
-
-RESOURCES +=

@@ -31,8 +31,9 @@
 #ifndef CLOCK_SETTINGS_H
 #define CLOCK_SETTINGS_H
 
-#include <QSettings>
 #include <QtQml>
+
+class MGConfItem;
 
 class ClockSettings : public QObject
 {
@@ -44,22 +45,19 @@ public:
     explicit ClockSettings(QObject* aParent = NULL);
     ~ClockSettings();
 
-    bool showNumbers() const { return iShowNumbers; }
-    bool invertColors() const { return iInvertColors; }
+    bool showNumbers() const;
+    bool invertColors() const;
 
     void setShowNumbers(bool aValue);
     void setInvertColors(bool aValue);
 
-private:
-    bool queryBool(QSettings* aSettings, QString aKey, bool* aValue);
-
 signals:
-    void showNumbersChanged(bool);
-    void invertColorsChanged(bool);
+    void showNumbersChanged();
+    void invertColorsChanged();
 
 private:
-    bool iShowNumbers;
-    bool iInvertColors;
+    MGConfItem* iShowNumbers;
+    MGConfItem* iInvertColors;
 };
 
 QML_DECLARE_TYPE(ClockSettings)

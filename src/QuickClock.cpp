@@ -40,9 +40,6 @@
 
 #define SUPER QQuickPaintedItem
 
-#define SETTING_INVERT_COLORS "invertColors"
-#define SETTING_DRAW_BACKGROUND "drawBackground"
-
 #define MCE_SERVICE "com.nokia.mce"
 
 QuickClock::QuickClock(QQuickItem* aParent) :
@@ -111,8 +108,8 @@ void QuickClock::setSettings(ClockSettings* aSettings)
         if (iSettings) iSettings->disconnect(this);
         iSettings = aSettings;
         if (iSettings) {
-            connect(iSettings,SIGNAL(invertColorsChanged(bool)),
-                SLOT(onInvertColorsChanged(bool)));
+            connect(iSettings, SIGNAL(invertColorsChanged()),
+                SLOT(onInvertColorsChanged()));
         }
         settingsChanged(iSettings);
         invalidPixmaps();
@@ -136,7 +133,7 @@ void QuickClock::updateColors()
     }
 }
 
-void QuickClock::onInvertColorsChanged(bool aValue)
+void QuickClock::onInvertColorsChanged()
 {
     invalidPixmaps();
     updateColors();

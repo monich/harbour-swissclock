@@ -79,7 +79,7 @@ private:
 private slots:
     void onDisplayStatusChanged(QString);
     void onDisplayStatusQueryDone(QDBusPendingCallWatcher*);
-    void onInvertColorsChanged(bool);
+    void onInvertColorsChanged();
 
 private:
     QColor iBackgroundColor;
