@@ -56,6 +56,7 @@ Page {
             Label {
                 id: label1
                 text: "12"
+                font.bold: true
                 width: parent.width
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
@@ -66,6 +67,7 @@ Page {
                 Label {
                     id: label2
                     text: "9"
+                    font.bold: true
                     height: parent.height
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
@@ -90,6 +92,7 @@ Page {
                 Label {
                     id: label3
                     text: "3"
+                    font.bold: true
                     height: parent.height
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
@@ -98,6 +101,7 @@ Page {
             Label {
                 id: label4
                 text: "6"
+                font.bold: true
                 width: parent.width
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
