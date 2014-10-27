@@ -136,6 +136,7 @@ Page {
                                 anchors.fill: parent
                                 settings: clockSettings
                                 style: getClockStyle(index)
+                                running: (index == slideshow.currentIndex) || slideshow.moving
                             }
                             MouseArea {
                                 anchors.fill: parent

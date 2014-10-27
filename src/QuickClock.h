@@ -37,7 +37,9 @@
 
 #include <QQuickPaintedItem>
 #include <QDateTime>
+#include <QPainter>
 #include <QPixmap>
+#include <QTimer>
 #include <QList>
 
 class QDBusPendingCallWatcher;
@@ -46,6 +48,7 @@ class QuickClock: public QQuickPaintedItem
 {
     Q_OBJECT
     Q_PROPERTY(bool drawBackground READ drawBackground WRITE setDrawBackground NOTIFY drawBackgroundChanged)
+    Q_PROPERTY(bool running READ running WRITE setRunning NOTIFY runningChanged)
     Q_PROPERTY(ClockSettings* settings READ settings WRITE setSettings NOTIFY settingsChanged)
     Q_PROPERTY(QString style READ style WRITE setStyle NOTIFY styleChanged)
 
@@ -59,6 +62,9 @@ public:
     bool drawBackground() const { return iDrawBackground; }
     void setDrawBackground(bool aValue);
 
+    bool running() const { return iRunning; }
+    void setRunning(bool aRunning);
+
     QString style() const { return iRenderer->id(); }
     void setStyle(QString aStyle);
 
@@ -66,15 +72,15 @@ signals:
     void drawBackgroundChanged();
     void settingsChanged();
     void styleChanged();
+    void runningChanged();
 
 protected:
     virtual void paint(QPainter* aPainter);
-    virtual void timerEvent(QTimerEvent* aEvent);
 
 private:
     void invalidatePixmaps();
-    void setRunning(bool aRunning);
-    void setDisplayStatus(QString aStatus) { setRunning(aStatus != "off"); }
+    void scheduleUpdate();
+    void setDisplayStatus(QString aStatus);
     void paintOffScreenNoSec(QPainter* aPainter, const QSize& aSize,
          const QTime& aTime);
 
@@ -82,9 +88,12 @@ private slots:
     void onDisplayStatusChanged(QString);
     void onDisplayStatusQueryDone(QDBusPendingCallWatcher*);
     void onInvertColorsChanged();
+    void onRepaintTimer();
 
 private:
     bool iDrawBackground;
+    bool iDisplayOn;
+    bool iRunning;
     ClockTheme* iThemeDefault;
     ClockTheme* iThemeInverted;
     ClockTheme* iTheme;
@@ -94,7 +103,7 @@ private:
     QPixmap* iDialPlate;
     QPixmap* iOffScreenNoSec;   // Everything except seconds
     QTime iPaintTimeNoSec;      // When iOffScreenNoSec was painted
-    int iTimerId;
+    QTimer* iRepaintTimer;
 
 #define CLOCK_PERFORMANCE_LOG 0
 #if CLOCK_PERFORMANCE_LOG

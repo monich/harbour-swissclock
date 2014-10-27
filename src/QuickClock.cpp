@@ -36,7 +36,7 @@
 #include <QDBusPendingCall>
 #include <QDBusPendingCallWatcher>
 #include <QDBusPendingReply>
-#include <QPainter>
+#include <QMetaObject>
 
 #define SUPER QQuickPaintedItem
 
@@ -45,18 +45,24 @@
 QuickClock::QuickClock(QQuickItem* aParent) :
     SUPER(aParent),
     iDrawBackground(true),
+    iDisplayOn(true),
+    iRunning(true),
     iThemeDefault(ClockTheme::newDefault()),
     iThemeInverted(ClockTheme::newInverted()),
     iSettings(NULL),
     iDialPlate(NULL),
     iOffScreenNoSec(NULL),
-    iTimerId(0)
+    iRepaintTimer(new QTimer(this))
 {
     QTRACE("- created");
     iTheme = iThemeDefault;
     iRenderers.append(ClockRenderer::newSwissRailroad());
     iRenderers.append(ClockRenderer::newHelsinkiMetro());
     setStyle(DEFAULT_CLOCK_STYLE);
+
+    iRepaintTimer->setSingleShot(true);
+    iRepaintTimer->setInterval(10);
+    connect(iRepaintTimer, SIGNAL(timeout()), SLOT(onRepaintTimer()));
 
 #if CLOCK_PERFORMANCE_LOG
     iRenderCount = 0;
@@ -106,7 +112,7 @@ void QuickClock::setDrawBackground(bool aValue)
     if (iDrawBackground != aValue) {
         iDrawBackground = aValue;
         invalidatePixmaps();
-        drawBackgroundChanged();
+        emit drawBackgroundChanged();
         update();
     }
 }
@@ -124,7 +130,7 @@ void QuickClock::setSettings(ClockSettings* aSettings)
         } else {
             iTheme = iThemeDefault;
         }
-        settingsChanged();
+        emit settingsChanged();
         invalidatePixmaps();
         update();
     }
@@ -140,7 +146,7 @@ void QuickClock::setStyle(QString aStyle)
             if (iRenderer != renderer) {
                 iRenderer = renderer;
                 invalidatePixmaps();
-                styleChanged();
+                emit styleChanged();
             }
             return;
         }
@@ -174,24 +180,39 @@ void QuickClock::onDisplayStatusQueryDone(QDBusPendingCallWatcher* aWatcher)
     aWatcher->deleteLater();
 }
 
-void QuickClock::timerEvent(QTimerEvent* aEvent)
+void QuickClock::setDisplayStatus(QString aStatus)
 {
-    if (aEvent->timerId() == iTimerId) {
+    iDisplayOn = (aStatus != "off");
+    if (iDisplayOn) {
+        QTRACE("- requesting update");
         update();
+    }
+}
+
+void QuickClock::onRepaintTimer()
+{
+    if (iRunning && iDisplayOn) {
+        update();
+    } else {
+        QTRACE("- stopping updates");
     }
 }
 
 void QuickClock::setRunning(bool aRunning)
 {
-    if (aRunning && !iTimerId) {
-        update();
-        iTimerId = startTimer(10);
-        QTRACE("timer id" << iTimerId);
-    } else if (!aRunning && iTimerId) {
-        killTimer(iTimerId);
-        iTimerId = 0;
-        QTRACE("timer off");
+    if (iRunning != aRunning) {
+        iRunning = aRunning;
+        if (aRunning) {
+            QTRACE("- requesting update");
+            update();
+        }
+        emit runningChanged();
     }
+}
+
+void QuickClock::scheduleUpdate()
+{
+    QMetaObject::invokeMethod(iRepaintTimer, "start", Qt::QueuedConnection);
 }
 
 void QuickClock::paintOffScreenNoSec(
@@ -269,6 +290,8 @@ void QuickClock::paint(QPainter* aPainter)
     aPainter->setCompositionMode(QPainter::CompositionMode_SourceOver);
     iRenderer->paintSecHand(aPainter, size, time, iTheme);
     aPainter->restore();
+
+    scheduleUpdate();
 
 #if CLOCK_PERFORMANCE_LOG
     iRenderCount++;
