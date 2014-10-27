@@ -31,7 +31,9 @@
 #ifndef QUICK_CLOCK_H
 #define QUICK_CLOCK_H
 
+#include "ClockRenderer.h"
 #include "ClockSettings.h"
+#include "ClockTheme.h"
 
 #include <QQuickPaintedItem>
 #include <QPixmap>
@@ -64,17 +66,11 @@ protected:
     virtual void timerEvent(QTimerEvent* aEvent);
 
 private:
-    void invalidPixmaps();
-    void updateColors();
+    void invalidatePixmaps();
     void setRunning(bool aRunning);
     void setDisplayStatus(QString aStatus) { setRunning(aStatus != "off"); }
-    void paintDialPlate(const QSize& aSize);
     void paintOffScreenNoSec(QPainter* aPainter, const QSize& aSize,
          const QTime& aTime);
-    qreal dialPlateSize() const { return qMin(width(),height()); }
-    static void paintSimpleHand(QPainter* aPainter, const QRectF& aRect,
-        qreal aAngle, const QBrush& aBrush,
-        qreal aX = 0.0, qreal aY = 0.0);
 
 private slots:
     void onDisplayStatusChanged(QString);
@@ -82,11 +78,12 @@ private slots:
     void onInvertColorsChanged();
 
 private:
-    QColor iBackgroundColor;
-    QColor iHourMinArmColor;
-    QColor iArmShadowColor1;
-    QColor iArmShadowColor2;
     bool iDrawBackground;
+    ClockTheme* iThemeDefault;
+    ClockTheme* iThemeInverted;
+    ClockTheme* iTheme;
+    ClockRenderer* iSwissClockRenderer;
+    ClockRenderer* iRenderer;
     ClockSettings* iSettings;
     QPixmap* iDialPlate;
     QPixmap* iOffScreenNoSec;   // Everything except seconds

@@ -12,11 +12,15 @@ CONFIG(debug, debug|release) {
 SOURCES += \
     src/main.cpp \
     src/ClockSettings.cpp \
-    src/QuickClock.cpp
+    src/ClockTheme.cpp \
+    src/QuickClock.cpp \
+    src/SwissClockRenderer.cpp
 
 HEADERS += \
     src/ClockDebug.h \
+    src/ClockRenderer.h \
     src/ClockSettings.h \
+    src/ClockTheme.h \
     src/QuickClock.h
 
 OTHER_FILES += \
