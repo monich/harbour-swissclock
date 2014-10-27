@@ -30,28 +30,31 @@
 
 #include "ClockRenderer.h"
 
-class SwissClockRenderer : public ClockRenderer
+#include <QPainterPath>
+
+class HelsinkiMetro : public ClockRenderer
 {
 public:
+    HelsinkiMetro() : ClockRenderer("HelsinkiMetro") {}
     virtual void paintDialPlate(QPainter* aPainter, const QSize& aSize,
         ClockTheme* aTheme, bool aDrawBackground);
     virtual void paintHourMinHands(QPainter* aPainter, const QSize& aSize,
         const QTime& aTime, ClockTheme* aTheme);
     virtual void paintSecHand(QPainter* aPainter, const QSize& aSize,
         const QTime& aTime, ClockTheme* aTheme);
-    static void paintSimpleHand(QPainter* aPainter, const QRectF& aRect,
+    static void paintHand(QPainter* aPainter, const QRectF& aRect,
         qreal aAngle, const QBrush& aBrush,
         qreal aX = 0.0, qreal aY = 0.0);
 };
 
 ClockRenderer*
-ClockRenderer::newSwissClockRenderer()
+ClockRenderer::newHelsinkiMetro()
 {
-    return new SwissClockRenderer;
+    return new HelsinkiMetro;
 }
 
 void
-SwissClockRenderer::paintDialPlate(
+HelsinkiMetro::paintDialPlate(
     QPainter* aPainter,
     const QSize& aSize,
     ClockTheme* aTheme,
@@ -60,6 +63,9 @@ SwissClockRenderer::paintDialPlate(
     const qreal w = aSize.width();
     const qreal h = aSize.height();
     const qreal d = qMin(w, h);
+    const qreal r1 = d / 2;
+    const qreal r2 = r1 - qMax(qreal(1), qreal(d / 98));
+    const qreal r3 = d / 16.25;
 
     aPainter->save();
     aPainter->translate(w/2, h/2);
@@ -68,17 +74,21 @@ SwissClockRenderer::paintDialPlate(
     QPointF center(0,0);
     if (aDrawBackground) {
         aPainter->setPen(Qt::NoPen);
+        aPainter->setBrush(QBrush(aTheme->iBackgroundColor2));
+        aPainter->drawEllipse(center, r1, r1);
         aPainter->setBrush(QBrush(aTheme->iBackgroundColor));
-        aPainter->drawEllipse(center, d/2, d/2);
+        aPainter->drawEllipse(center, r2, r2);
+        aPainter->setBrush(QBrush(aTheme->iBackgroundColor1));
+        aPainter->drawEllipse(center, r3, r3);
     }
 
-    const qreal y = d / 50;
-    const qreal y1 = qMax((qreal)1, d / 158);
-    const qreal x1 = d * 10 / 27;
-    const qreal x2 = d * 10 / 21;
-    const qreal x = (x1+x2)/2;
-    QRectF hourMarkRect(x1, -y, (x2-x1), 2*y);
-    QRectF minMarkRect(x, -y1, (x2-x), 2*y1);
+    const qreal y = d / 84;
+    const qreal y1 = qMax(qreal(1), qreal(d / 195));
+    const qreal x1 = d / 2.71;
+    const qreal x2 = d / 2.25;
+    const qreal x3 = d / 2.1;
+    QRectF hourMarkRect(x1, -y, (x3-x1), 2*y);
+    QRectF minMarkRect(x2, -y1, (x3-x2), 2*y1);
     QBrush markBrush(aTheme->iHourMinHandColor);
 
     aPainter->setPen(aTheme->iHourMinHandColor);
@@ -94,7 +104,7 @@ SwissClockRenderer::paintDialPlate(
 }
 
 void
-SwissClockRenderer::paintSimpleHand(
+HelsinkiMetro::paintHand(
     QPainter* aPainter,
     const QRectF& aRect,
     qreal aAngle,
@@ -102,15 +112,27 @@ SwissClockRenderer::paintSimpleHand(
     qreal aX,
     qreal aY)
 {
+    const qreal x = aRect.right() - aRect.height() / 3.0;
+
+    QPainterPath path;
+    path.moveTo(aRect.left(), aRect.bottom());
+    path.lineTo(aRect.left(), aRect.top());
+    path.lineTo(x, aRect.top());
+    path.lineTo(aRect.right(), (aRect.top() + aRect.bottom())/2.0);
+    path.lineTo(x, aRect.bottom());
+    path.closeSubpath();
+
     aPainter->save();
     aPainter->translate(aX,aY);
     aPainter->rotate(aAngle);
-    aPainter->fillRect(aRect, aBrush);
+    aPainter->setPen(Qt::NoPen);
+    aPainter->setBrush(aBrush);
+    aPainter->drawPath(path);
     aPainter->restore();
 }
 
 void
-SwissClockRenderer::paintHourMinHands(
+HelsinkiMetro::paintHourMinHands(
     QPainter* aPainter,
     const QSize& aSize,
     const QTime& aTime,
@@ -118,15 +140,15 @@ SwissClockRenderer::paintHourMinHands(
 {
     // Draw hands
     const qreal d = qMin(aSize.width(),aSize.height());
-    const qreal y = d / 50;
-    const qreal x1 = d * 10 / 27;
-    const qreal x2 = d * 10 / 21;
-    const qreal xh1 = -(d * 10 / 74);
-    const qreal xh2 = (d * 10 / 36);
+    const qreal x = d / 2 - qMax(qreal(1), qreal(d / 98));
+    const qreal yh = d / 31;
+    const qreal ym = d / 50;
+    const qreal xh1 = -(d / 8.6);
+    const qreal xh2 = d / 3.4;
     const qreal xm1 = xh1;
-    const qreal xm2 = (x1+x2)/2;
-    QRectF hourHandRect(xh1, -y, (xh2-xh1), 2*y);
-    QRectF minHandRect(xm1, -y, (xm2-xm1), 2*y);
+    const qreal xm2 = qMin(qreal(d / 2.03), x - 2);
+    QRectF hourHandRect(xh1, -yh, (xh2-xh1), 2*yh);
+    QRectF minHandRect(xm1, -ym, (xm2-xm1), 2*ym);
     QBrush handBrush(aTheme->iHourMinHandColor);
     QBrush shadowBrush1(aTheme->iHandShadowColor1);
     QBrush shadowBrush2(aTheme->iHandShadowColor2);
@@ -140,16 +162,16 @@ SwissClockRenderer::paintHourMinHands(
     aPainter->save();
     aPainter->translate(rect.center());
     aPainter->setPen(aTheme->iHourMinHandColor);
-    paintSimpleHand(aPainter, hourHandRect, hourAngle, handBrush);
-    paintSimpleHand(aPainter, minHandRect, minAngle, shadowBrush2, -1, -1);
-    paintSimpleHand(aPainter, minHandRect, minAngle, shadowBrush2, 2, 2);
-    paintSimpleHand(aPainter, minHandRect, minAngle, shadowBrush1, 1, 1);
-    paintSimpleHand(aPainter, minHandRect, minAngle, handBrush);
+    paintHand(aPainter, hourHandRect, hourAngle, handBrush);
+    paintHand(aPainter, minHandRect, minAngle, shadowBrush2, -1, -1);
+    paintHand(aPainter, minHandRect, minAngle, shadowBrush2, 2, 2);
+    paintHand(aPainter, minHandRect, minAngle, shadowBrush1, 1, 1);
+    paintHand(aPainter, minHandRect, minAngle, handBrush);
     aPainter->restore();
 }
 
 void
-SwissClockRenderer::paintSecHand(
+HelsinkiMetro::paintSecHand(
     QPainter* aPainter,
     const QSize& aSize,
     const QTime& aTime,
@@ -159,36 +181,33 @@ SwissClockRenderer::paintSecHand(
     const qreal h = aSize.height();
     const qreal d = qMin(w, h);
 
-    // Seconds hand colors don't depend on the theme
-    QColor red(Qt::red);
-    QColor black(Qt::black);
-    QColor white(Qt::white);
+    const qreal y = qMax(qreal(1), qreal(d / 195));
+    const qreal x1 = -(d / 6.97);
+    const qreal x2 = d / 2;
+    const qreal r = d / 23;
+
+    QPainterPath path;
+    path.moveTo(x1, 0);
+    path.lineTo(x1+y, -y);
+    path.lineTo(x2-y, -y);
+    path.lineTo(x2, 0);
+    path.lineTo(x2-y, y);
+    path.lineTo(x1+y, y);
+    path.closeSubpath();
+
+    QBrush secBrush(aTheme->iSecondHandColor);
     QPointF center(0,0);
-
-    // Draw the second hand
-    const qreal y = qMax(d / 50, (qreal)5);
-    const qreal x1 = d * 10 / 27;
-    const qreal xh1 = -(d * 10 / 74);
-
-    const qreal rs1 = y-1;
-    const qreal rs2 = d/26;
-    const qreal ds = rs1-2;
-    const qreal xs1 = xh1 + d / 140;
-    const qreal xs2 = x1 - d / 50 - rs2;
-    QRectF secHandRect(xs1, -ds/2.0, (xs2-xs1), ds);
-    QBrush secBrush(red);
 
     aPainter->save();
     aPainter->setPen(Qt::NoPen);
     aPainter->setBrush(secBrush);
     aPainter->translate(w/2, h/2);
     aPainter->rotate(6.0 * (aTime.second() + aTime.msec()/1000.0) - 90);
-    aPainter->fillRect(secHandRect, secBrush);
-    aPainter->drawEllipse(center, rs1, rs1);
-    aPainter->drawEllipse(QPointF(xs2,0), rs2, rs2);
-    aPainter->setBrush(QBrush(white));
+    aPainter->drawPath(path);
+    aPainter->drawEllipse(center, r, r);
+    aPainter->setBrush(QBrush(Qt::white));
     aPainter->drawEllipse(center, 2, 2);
-    aPainter->setBrush(QBrush(black));
+    aPainter->setBrush(QBrush(Qt::black));
     aPainter->drawEllipse(center, 1, 1);
     aPainter->restore();
 }

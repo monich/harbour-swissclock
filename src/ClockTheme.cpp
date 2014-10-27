@@ -34,7 +34,10 @@ ClockTheme* ClockTheme::newDefault()
 {
     ClockTheme* theme = new ClockTheme;
     theme->iBackgroundColor.setRgb(43,43,43);
+    theme->iBackgroundColor1.setRgb(86,86,86);
+    theme->iBackgroundColor2.setRgb(43,43,43);
     theme->iHourMinHandColor.setRgb(228,228,228);
+    theme->iSecondHandColor.setRgb(255,0,0);
     theme->iHandShadowColor1.setRgb(43,43,43,0x80);
     theme->iHandShadowColor2.setRgb(43,43,43,0x40);
     return theme;
@@ -44,7 +47,10 @@ ClockTheme* ClockTheme::newInverted()
 {
     ClockTheme* theme = new ClockTheme;
     theme->iBackgroundColor.setRgb(228,228,228);
+    theme->iBackgroundColor1.setRgb(212,212,212);
+    theme->iBackgroundColor2.setRgb(43,43,43);
     theme->iHourMinHandColor.setRgb(43,43,43);
+    theme->iSecondHandColor.setRgb(255,0,0);
     theme->iHandShadowColor1.setRgb(228,228,228,0x40);
     theme->iHandShadowColor2.setRgb(228,228,228,0x80);
     return theme;

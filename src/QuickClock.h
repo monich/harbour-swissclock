@@ -36,8 +36,9 @@
 #include "ClockTheme.h"
 
 #include <QQuickPaintedItem>
-#include <QPixmap>
 #include <QDateTime>
+#include <QPixmap>
+#include <QList>
 
 class QDBusPendingCallWatcher;
 
@@ -46,6 +47,7 @@ class QuickClock: public QQuickPaintedItem
     Q_OBJECT
     Q_PROPERTY(bool drawBackground READ drawBackground WRITE setDrawBackground NOTIFY drawBackgroundChanged)
     Q_PROPERTY(ClockSettings* settings READ settings WRITE setSettings NOTIFY settingsChanged)
+    Q_PROPERTY(QString style READ style WRITE setStyle NOTIFY styleChanged)
 
 public:
     explicit QuickClock(QQuickItem* aParent = NULL);
@@ -57,9 +59,13 @@ public:
     bool drawBackground() const { return iDrawBackground; }
     void setDrawBackground(bool aValue);
 
+    QString style() const { return iRenderer->id(); }
+    void setStyle(QString aStyle);
+
 signals:
-    void drawBackgroundChanged(bool aValue);
-    void settingsChanged(ClockSettings* aValue);
+    void drawBackgroundChanged();
+    void settingsChanged();
+    void styleChanged();
 
 protected:
     virtual void paint(QPainter* aPainter);
@@ -82,7 +88,7 @@ private:
     ClockTheme* iThemeDefault;
     ClockTheme* iThemeInverted;
     ClockTheme* iTheme;
-    ClockRenderer* iSwissClockRenderer;
+    QList<ClockRenderer*> iRenderers;
     ClockRenderer* iRenderer;
     ClockSettings* iSettings;
     QPixmap* iDialPlate;

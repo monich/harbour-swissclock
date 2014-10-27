@@ -20,6 +20,7 @@ BuildRequires: pkgconfig(Qt5Qml)
 BuildRequires: pkgconfig(Qt5Quick)
 BuildRequires: pkgconfig(Qt5DBus)
 BuildRequires: desktop-file-utils
+BuildRequires: qt5-qttools-linguist
 
 %description
 Swiss-style clock
@@ -47,6 +48,11 @@ desktop-file-install --delete-original \
 %{_datadir}/icons/hicolor/86x86/apps/%{name}.png
 
 %changelog
+* Sun Oct 26 2014 Slava Monich <slava.monich@jolla.com> 1.0.2
+- Store settings in dconf
+- Fixed a problem with the minute hand being a bit too blurry
+- Added Helsinki metro clock
+
 * Fri Jun 27 2014 Slava Monich <slava.monich@jolla.com> 1.0.1
 - Fixed corrupted background (hopefully)
 

@@ -30,18 +30,33 @@
 
 #include "QuickClock.h"
 #include "ClockSettings.h"
+#include "ClockDebug.h"
 
 #include <QtGui>
 #include <QtQuick>
 #include <sailfishapp.h>
+
+void registerClockTypes(const char* uri, int v1 = 1, int v2 = 0)
+{
+    qmlRegisterType<QuickClock>(uri, v1, v2, "Clock");
+    qmlRegisterType<ClockSettings>(uri, v1, v2, "ClockSettings");
+}
 
 int main(int argc, char *argv[])
 {
     int result = 0;
     QGuiApplication* app = SailfishApp::application(argc, argv);
 
-    qmlRegisterType<QuickClock>("harbour.swissclock", 1, 0, "Clock");
-    qmlRegisterType<ClockSettings>("harbour.swissclock", 1, 0, "ClockSettings");
+    QTranslator* translator = new QTranslator(app);
+    QString transDir = SailfishApp::pathTo("translations").toLocalFile();
+    if (translator->load(QLocale(), "harbour-swissclock", "-", transDir)) {
+        app->installTranslator(translator);
+    } else {
+        QDEBUG("Failed to load translator for" << QLocale());
+        delete translator;
+    }
+
+    registerClockTypes("harbour.swissclock", 1, 0);
 
     QQuickView *view = SailfishApp::createView();
     view->setSource(SailfishApp::pathTo(QString("qml/main.qml")));

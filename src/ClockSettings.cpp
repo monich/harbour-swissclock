@@ -38,6 +38,7 @@
 #define DCONF_PATH              "/apps/harbour-swissclock/"
 #define KEY_SHOW_NUMBERS        "showNumbers"
 #define KEY_INVERT_COLORS       "invertColors"
+#define KEY_CLOCK_STYLE         "clockStyle"
 
 #define SETTINGS_SHOW_NUMBERS   SETTINGS_GROUP KEY_SHOW_NUMBERS
 #define SETTINGS_INVERT_COLORS  SETTINGS_GROUP KEY_INVERT_COLORS
@@ -47,7 +48,8 @@
 ClockSettings::ClockSettings(QObject* aParent) :
     QObject(aParent),
     iShowNumbers(new MGConfItem(DCONF_PATH KEY_SHOW_NUMBERS, this)),
-    iInvertColors(new MGConfItem(DCONF_PATH KEY_INVERT_COLORS, this))
+    iInvertColors(new MGConfItem(DCONF_PATH KEY_INVERT_COLORS, this)),
+    iClockStyle(new MGConfItem(DCONF_PATH KEY_CLOCK_STYLE, this))
 {
     QTRACE("- created");
 
@@ -68,6 +70,7 @@ ClockSettings::ClockSettings(QObject* aParent) :
 
     connect(iShowNumbers, SIGNAL(valueChanged()), SIGNAL(showNumbersChanged()));
     connect(iInvertColors, SIGNAL(valueChanged()), SIGNAL(invertColorsChanged()));
+    connect(iClockStyle, SIGNAL(valueChanged()), SIGNAL(clockStyleChanged()));
 }
 
 ClockSettings::~ClockSettings()
@@ -85,6 +88,11 @@ bool ClockSettings::invertColors() const
     return iInvertColors->value(DEFAULT_INVERT_COLORS).toBool();
 }
 
+QString ClockSettings::clockStyle() const
+{
+    return iClockStyle->value(DEFAULT_CLOCK_STYLE).toString();
+}
+
 void ClockSettings::setShowNumbers(bool aValue)
 {
     QTRACE("-" << KEY_SHOW_NUMBERS << "=" << aValue);
@@ -95,4 +103,10 @@ void ClockSettings::setInvertColors(bool aValue)
 {
     QTRACE("-" << KEY_INVERT_COLORS << "=" << aValue);
     iInvertColors->set(aValue);
+}
+
+void ClockSettings::setClockStyle(QString aValue)
+{
+    QTRACE("-" << KEY_CLOCK_STYLE << "=" << aValue);
+    iClockStyle->set(aValue);
 }

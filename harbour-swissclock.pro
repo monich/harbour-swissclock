@@ -11,10 +11,12 @@ CONFIG(debug, debug|release) {
 
 SOURCES += \
     src/main.cpp \
+    src/ClockRenderer.cpp \
+    src/ClockRendererHelsinkiMetro.cpp \
+    src/ClockRendererSwissRailroad.cpp \
     src/ClockSettings.cpp \
     src/ClockTheme.cpp \
-    src/QuickClock.cpp \
-    src/SwissClockRenderer.cpp
+    src/QuickClock.cpp
 
 HEADERS += \
     src/ClockDebug.h \
@@ -24,10 +26,14 @@ HEADERS += \
     src/QuickClock.h
 
 OTHER_FILES += \
-    qml/main.qml \
-    qml/cover/*.qml \
-    qml/pages/*.qml \
-    qml/pages/*.png \
+    qml/*.qml \
+    qml/*.png \
     harbour-swissclock.desktop \
+    translations/*.ts \
     rpm/harbour-swissclock.changes \
     rpm/harbour-swissclock.spec
+
+CONFIG += sailfishapp_i18n
+TRANSLATIONS += \
+    translations/harbour-swissclock.ts \
+    translations/harbour-swissclock-ru.ts

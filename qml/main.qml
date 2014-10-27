@@ -30,11 +30,12 @@
 
 import QtQuick 2.0
 import Sailfish.Silica 1.0
-import "pages"
+import harbour.swissclock 1.0
 
 ApplicationWindow {
     id: window
     allowedOrientations: Orientation.Portrait
     initialPage: Component { ClockPage {} }
-    cover: Qt.resolvedUrl("cover/CoverPage.qml")
+    cover: Component { ClockCover {} }
+    ClockSettings { id: clockSettings }
 }

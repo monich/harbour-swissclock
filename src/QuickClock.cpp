@@ -47,7 +47,6 @@ QuickClock::QuickClock(QQuickItem* aParent) :
     iDrawBackground(true),
     iThemeDefault(ClockTheme::newDefault()),
     iThemeInverted(ClockTheme::newInverted()),
-    iSwissClockRenderer(ClockRenderer::newSwissClockRenderer()),
     iSettings(NULL),
     iDialPlate(NULL),
     iOffScreenNoSec(NULL),
@@ -55,7 +54,9 @@ QuickClock::QuickClock(QQuickItem* aParent) :
 {
     QTRACE("- created");
     iTheme = iThemeDefault;
-    iRenderer = iSwissClockRenderer;
+    iRenderers.append(ClockRenderer::newSwissRailroad());
+    iRenderers.append(ClockRenderer::newHelsinkiMetro());
+    setStyle(DEFAULT_CLOCK_STYLE);
 
 #if CLOCK_PERFORMANCE_LOG
     iRenderCount = 0;
@@ -85,7 +86,7 @@ QuickClock::~QuickClock()
     if (iOffScreenNoSec) delete iOffScreenNoSec;
     delete iThemeDefault;
     delete iThemeInverted;
-    delete iSwissClockRenderer;
+    while (!iRenderers.isEmpty()) delete iRenderers.takeLast();
 }
 
 void QuickClock::invalidatePixmaps()
@@ -105,7 +106,7 @@ void QuickClock::setDrawBackground(bool aValue)
     if (iDrawBackground != aValue) {
         iDrawBackground = aValue;
         invalidatePixmaps();
-        drawBackgroundChanged(aValue);
+        drawBackgroundChanged();
         update();
     }
 }
@@ -117,15 +118,35 @@ void QuickClock::setSettings(ClockSettings* aSettings)
         iSettings = aSettings;
         if (iSettings) {
             iTheme = iSettings->invertColors() ? iThemeDefault : iThemeInverted;
+            setStyle(iSettings->clockStyle());
             connect(iSettings, SIGNAL(invertColorsChanged()),
                 SLOT(onInvertColorsChanged()));
         } else {
             iTheme = iThemeDefault;
         }
-        settingsChanged(iSettings);
+        settingsChanged();
         invalidatePixmaps();
         update();
     }
+}
+
+void QuickClock::setStyle(QString aStyle)
+{
+    if (aStyle.isEmpty()) aStyle = DEFAULT_CLOCK_STYLE;
+    for (int i=0; i<iRenderers.count(); i++) {
+        ClockRenderer* renderer = iRenderers.at(i);
+        if (renderer->id() == aStyle) {
+            QTRACE("style = " << aStyle);
+            if (iRenderer != renderer) {
+                iRenderer = renderer;
+                invalidatePixmaps();
+                styleChanged();
+            }
+            return;
+        }
+    }
+    QTRACE("unknown style" << aStyle);
+    if (!iRenderer) iRenderer = iRenderers.at(0);
 }
 
 void QuickClock::onInvertColorsChanged()

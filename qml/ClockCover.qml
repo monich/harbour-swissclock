@@ -28,37 +28,17 @@
   SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef CLOCK_RENDERER_H
-#define CLOCK_RENDERER_H
+import QtQuick 2.0
+import Sailfish.Silica 1.0
+import harbour.swissclock 1.0
 
-#include "ClockTheme.h"
-
-#include <QPainter>
-#include <QDateTime>
-#include <QSize>
-
-class ClockRenderer
-{
-public:
-    virtual ~ClockRenderer();
-    virtual void paintDialPlate(QPainter* aPainter, const QSize& aSize,
-        ClockTheme* aTheme, bool aDrawBackground) = 0;
-    virtual void paintHourMinHands(QPainter* aPainter, const QSize& aSize,
-        const QTime& aTime, ClockTheme* aTheme) = 0;
-    virtual void paintSecHand(QPainter* aPainter, const QSize& aSize,
-        const QTime& aTime, ClockTheme* aTheme) = 0;
-
-    QString id() const { return iId; }
-
-public:
-    static ClockRenderer* newSwissRailroad();
-    static ClockRenderer* newHelsinkiMetro();
-
-protected:
-    ClockRenderer(QString aId);
-
-private:
-    QString iId;
-};
-
-#endif // CLOCK_RENDERER_H
+CoverBackground {
+    Clock {
+        id: clock
+        drawBackground: false
+        style: clockSettings.clockStyle
+        anchors.centerIn: parent
+        width: parent.width - 2*Theme.paddingMedium
+        height: width
+    }
+}

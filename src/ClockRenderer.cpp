@@ -28,16 +28,12 @@
   SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-import QtQuick 2.0
-import Sailfish.Silica 1.0
-import harbour.swissclock 1.0
+#include "ClockRenderer.h"
 
-CoverBackground {
-    Clock {
-        id: clock
-        drawBackground: false
-        anchors.centerIn: parent
-        width: parent.width - 2*Theme.paddingMedium
-        height: width
-    }
+ClockRenderer::ClockRenderer(QString aId) : iId(aId)
+{
+}
+
+ClockRenderer::~ClockRenderer()
+{
 }

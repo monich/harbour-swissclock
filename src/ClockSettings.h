@@ -33,6 +33,11 @@
 
 #include <QtQml>
 
+#define CLOCK_STYLE_SWISS_RAILROAD  "SwissRailroad"
+#define CLOCK_STYLE_HELSINKI_METRO  "HelsinkiMetro"
+
+#define DEFAULT_CLOCK_STYLE         CLOCK_STYLE_SWISS_RAILROAD
+
 class MGConfItem;
 
 class ClockSettings : public QObject
@@ -40,6 +45,7 @@ class ClockSettings : public QObject
     Q_OBJECT
     Q_PROPERTY(bool showNumbers READ showNumbers WRITE setShowNumbers NOTIFY showNumbersChanged)
     Q_PROPERTY(bool invertColors READ invertColors WRITE setInvertColors NOTIFY invertColorsChanged)
+    Q_PROPERTY(QString clockStyle READ clockStyle WRITE setClockStyle NOTIFY clockStyleChanged)
 
 public:
     explicit ClockSettings(QObject* aParent = NULL);
@@ -47,17 +53,21 @@ public:
 
     bool showNumbers() const;
     bool invertColors() const;
+    QString clockStyle() const;
 
     void setShowNumbers(bool aValue);
     void setInvertColors(bool aValue);
+    void setClockStyle(QString aValue);
 
 signals:
     void showNumbersChanged();
     void invertColorsChanged();
+    void clockStyleChanged();
 
 private:
     MGConfItem* iShowNumbers;
     MGConfItem* iInvertColors;
+    MGConfItem* iClockStyle;
 };
 
 QML_DECLARE_TYPE(ClockSettings)
