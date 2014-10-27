@@ -185,14 +185,13 @@ void QuickClock::paintOffScreenNoSec(
         QDEBUG("drawing dial plate");
         QRectF rect(QPoint(0,0), aSize);
         QPainter painter(iDialPlate);
-        //painter.save();
         painter.setRenderHint(QPainter::Antialiasing);
         painter.setRenderHint(QPainter::HighQualityAntialiasing);
         painter.setCompositionMode(QPainter::CompositionMode_Source);
         painter.fillRect(rect, QBrush(Qt::transparent));
+        aPainter->setCompositionMode(QPainter::CompositionMode_SourceOver);
 
         iRenderer->paintDialPlate(&painter, aSize, iTheme, iDrawBackground);
-        //painter.restore();
     }
 
     aPainter->drawPixmap(0, 0, *iDialPlate);
@@ -200,6 +199,7 @@ void QuickClock::paintOffScreenNoSec(
     aPainter->save();
     aPainter->setRenderHint(QPainter::Antialiasing);
     aPainter->setRenderHint(QPainter::HighQualityAntialiasing);
+    aPainter->setCompositionMode(QPainter::CompositionMode_SourceOver);
     iRenderer->paintHourMinHands(aPainter, aSize, aTime, iTheme);
     aPainter->restore();
 }
@@ -245,6 +245,7 @@ void QuickClock::paint(QPainter* aPainter)
 
     aPainter->setRenderHint(QPainter::Antialiasing);
     aPainter->setRenderHint(QPainter::HighQualityAntialiasing);
+    aPainter->setCompositionMode(QPainter::CompositionMode_SourceOver);
     iRenderer->paintSecHand(aPainter, size, time, iTheme);
     aPainter->restore();
 
