@@ -32,7 +32,6 @@
 #define QUICK_CLOCK_H
 
 #include "ClockRenderer.h"
-#include "ClockSettings.h"
 #include "ClockTheme.h"
 
 #include <QQuickPaintedItem>
@@ -45,9 +44,9 @@
 class QuickClock: public QQuickPaintedItem
 {
     Q_OBJECT
-    Q_PROPERTY(bool drawBackground READ drawBackground WRITE setDrawBackground NOTIFY drawBackgroundChanged)
     Q_PROPERTY(bool running READ running WRITE setRunning NOTIFY runningChanged)
-    Q_PROPERTY(ClockSettings* settings READ settings WRITE setSettings NOTIFY settingsChanged)
+    Q_PROPERTY(bool invertColors READ invertColors WRITE setInvertColors NOTIFY invertColorsChanged)
+    Q_PROPERTY(bool drawBackground READ drawBackground WRITE setDrawBackground NOTIFY drawBackgroundChanged)
     Q_PROPERTY(QString displayStatus READ displayStatus WRITE setDisplayStatus NOTIFY displayStatusChanged)
     Q_PROPERTY(QString style READ style WRITE setStyle NOTIFY styleChanged)
 
@@ -55,11 +54,8 @@ public:
     explicit QuickClock(QQuickItem* aParent = NULL);
     ~QuickClock();
 
-    ClockSettings* settings() const { return iSettings; }
-    void setSettings(ClockSettings* aSettings);
-
-    QString displayStatus() const { return iDisplayStatus; }
-    void setDisplayStatus(QString aDisplayStatus);
+    bool invertColors() const { return iInvertColors; }
+    void setInvertColors(bool aValue);
 
     bool drawBackground() const { return iDrawBackground; }
     void setDrawBackground(bool aValue);
@@ -67,12 +63,15 @@ public:
     bool running() const { return iRunning; }
     void setRunning(bool aRunning);
 
+    QString displayStatus() const { return iDisplayStatus; }
+    void setDisplayStatus(QString aValue);
+
     QString style() const { return iRenderer->id(); }
-    void setStyle(QString aStyle);
+    void setStyle(QString aValue);
 
 signals:
+    void invertColorsChanged();
     void drawBackgroundChanged();
-    void settingsChanged();
     void displayStatusChanged();
     void styleChanged();
     void runningChanged();
@@ -81,26 +80,25 @@ protected:
     virtual void paint(QPainter* aPainter);
 
 private:
+    ClockTheme* theme() const;
     void invalidatePixmaps();
     void scheduleUpdate();
     void paintOffScreenNoSec(QPainter* aPainter, const QSize& aSize,
          const QTime& aTime);
 
 private slots:
-    void onInvertColorsChanged();
     void onRepaintTimer();
 
 private:
+    bool iInvertColors;
     bool iDrawBackground;
     bool iDisplayOn;
     bool iRunning;
     QString iDisplayStatus;
     ClockTheme* iThemeDefault;
     ClockTheme* iThemeInverted;
-    ClockTheme* iTheme;
     QList<ClockRenderer*> iRenderers;
     ClockRenderer* iRenderer;
-    ClockSettings* iSettings;
     QPixmap* iDialPlate;
     QPixmap* iOffScreenNoSec;   // Everything except seconds
     QTime iPaintTimeNoSec;      // When iOffScreenNoSec was painted

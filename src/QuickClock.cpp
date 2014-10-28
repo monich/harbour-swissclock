@@ -29,6 +29,7 @@
 */
 
 #include "QuickClock.h"
+#include "ClockSettings.h"
 #include "ClockDebug.h"
 
 #define SUPER QQuickPaintedItem
@@ -37,18 +38,17 @@
 
 QuickClock::QuickClock(QQuickItem* aParent) :
     SUPER(aParent),
+    iInvertColors(DEFAULT_INVERT_COLORS),
     iDrawBackground(true),
     iDisplayOn(true),
     iRunning(true),
     iThemeDefault(ClockTheme::newDefault()),
     iThemeInverted(ClockTheme::newInverted()),
-    iSettings(NULL),
     iDialPlate(NULL),
     iOffScreenNoSec(NULL),
     iRepaintTimer(new QTimer(this))
 {
     QTRACE("- created");
-    iTheme = iThemeDefault;
     iRenderers.append(ClockRenderer::newSwissRailroad());
     iRenderers.append(ClockRenderer::newHelsinkiMetro());
     setStyle(DEFAULT_CLOCK_STYLE);
@@ -74,6 +74,11 @@ QuickClock::~QuickClock()
     while (!iRenderers.isEmpty()) delete iRenderers.takeLast();
 }
 
+ClockTheme* QuickClock::theme() const
+{
+    return iInvertColors ? iThemeInverted : iThemeDefault;
+}
+
 void QuickClock::invalidatePixmaps()
 {
     if (iDialPlate) {
@@ -86,68 +91,51 @@ void QuickClock::invalidatePixmaps()
     }
 }
 
+void QuickClock::setInvertColors(bool aValue)
+{
+    if (iInvertColors != aValue) {
+        iInvertColors = aValue;
+        emit invertColorsChanged();
+        invalidatePixmaps();
+        update();
+    }
+}
+
 void QuickClock::setDrawBackground(bool aValue)
 {
     if (iDrawBackground != aValue) {
         iDrawBackground = aValue;
-        invalidatePixmaps();
         emit drawBackgroundChanged();
-        update();
-    }
-}
-
-void QuickClock::setSettings(ClockSettings* aSettings)
-{
-    if (iSettings != aSettings) {
-        if (iSettings) iSettings->disconnect(this);
-        iSettings = aSettings;
-        if (iSettings) {
-            iTheme = iSettings->invertColors() ? iThemeDefault : iThemeInverted;
-            setStyle(iSettings->clockStyle());
-            connect(iSettings, SIGNAL(invertColorsChanged()),
-                SLOT(onInvertColorsChanged()));
-        } else {
-            iTheme = iThemeDefault;
-        }
-        emit settingsChanged();
         invalidatePixmaps();
         update();
     }
 }
 
-void QuickClock::setStyle(QString aStyle)
+void QuickClock::setStyle(QString aValue)
 {
-    if (aStyle.isEmpty()) aStyle = DEFAULT_CLOCK_STYLE;
+    if (aValue.isEmpty()) aValue = DEFAULT_CLOCK_STYLE;
     for (int i=0; i<iRenderers.count(); i++) {
         ClockRenderer* renderer = iRenderers.at(i);
-        if (renderer->id() == aStyle) {
-            QTRACE("style = " << aStyle);
+        if (renderer->id() == aValue) {
+            QTRACE("style = " << aValue);
             if (iRenderer != renderer) {
                 iRenderer = renderer;
-                invalidatePixmaps();
                 emit styleChanged();
+                invalidatePixmaps();
+                update();
             }
             return;
         }
     }
-    QTRACE("unknown style" << aStyle);
+    QTRACE("unknown style" << aValue);
     if (!iRenderer) iRenderer = iRenderers.at(0);
 }
 
-void QuickClock::onInvertColorsChanged()
+void QuickClock::setDisplayStatus(QString aValue)
 {
-    QASSERT(iSettings);
-    QTRACE("-" << iSettings->invertColors());
-    iTheme = iSettings->invertColors() ? iThemeDefault : iThemeInverted;
-    invalidatePixmaps();
-    update();
-}
-
-void QuickClock::setDisplayStatus(QString aDisplayStatus)
-{
-    QTRACE("-" << aDisplayStatus);
-    if (iDisplayStatus != aDisplayStatus) {
-        iDisplayStatus = aDisplayStatus;
+    QTRACE("-" << aValue);
+    if (iDisplayStatus != aValue) {
+        iDisplayStatus = aValue;
         emit displayStatusChanged();
         iDisplayOn = (iDisplayStatus != "off");
         if (iDisplayOn) {
@@ -201,7 +189,7 @@ void QuickClock::paintOffScreenNoSec(
         painter.fillRect(rect, QBrush(Qt::transparent));
         aPainter->setCompositionMode(QPainter::CompositionMode_SourceOver);
 
-        iRenderer->paintDialPlate(&painter, aSize, iTheme, iDrawBackground);
+        iRenderer->paintDialPlate(&painter, aSize, theme(), iDrawBackground);
     }
 
     aPainter->drawPixmap(0, 0, *iDialPlate);
@@ -210,7 +198,7 @@ void QuickClock::paintOffScreenNoSec(
     aPainter->setRenderHint(QPainter::Antialiasing);
     aPainter->setRenderHint(QPainter::HighQualityAntialiasing);
     aPainter->setCompositionMode(QPainter::CompositionMode_SourceOver);
-    iRenderer->paintHourMinHands(aPainter, aSize, aTime, iTheme);
+    iRenderer->paintHourMinHands(aPainter, aSize, aTime, theme());
     aPainter->restore();
 }
 
@@ -256,7 +244,7 @@ void QuickClock::paint(QPainter* aPainter)
     aPainter->setRenderHint(QPainter::Antialiasing);
     aPainter->setRenderHint(QPainter::HighQualityAntialiasing);
     aPainter->setCompositionMode(QPainter::CompositionMode_SourceOver);
-    iRenderer->paintSecHand(aPainter, size, time, iTheme);
+    iRenderer->paintSecHand(aPainter, size, time, theme());
     aPainter->restore();
 
     scheduleUpdate();

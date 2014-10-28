@@ -134,7 +134,8 @@ Page {
                             Clock {
                                 id: clock
                                 anchors.fill: parent
-                                settings: globalClockSettings
+                                drawBackground: true
+                                invertColors: globalClockSettings.invertColors
                                 style: getClockStyle(index)
                                 displayStatus: globalDisplayStatus.status
                                 running: (index == slideshow.currentIndex) || slideshow.moving

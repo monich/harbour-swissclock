@@ -42,8 +42,6 @@
 
 #define SETTINGS_SHOW_NUMBERS   SETTINGS_GROUP KEY_SHOW_NUMBERS
 #define SETTINGS_INVERT_COLORS  SETTINGS_GROUP KEY_INVERT_COLORS
-#define DEFAULT_SHOW_NUMBERS    false
-#define DEFAULT_INVERT_COLORS   false
 
 ClockSettings::ClockSettings(QObject* aParent) :
     QObject(aParent),

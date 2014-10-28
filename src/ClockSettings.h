@@ -33,10 +33,12 @@
 
 #include <QtQml>
 
+#define DEFAULT_SHOW_NUMBERS        false
+#define DEFAULT_INVERT_COLORS       false
+#define DEFAULT_CLOCK_STYLE         CLOCK_STYLE_SWISS_RAILROAD
+
 #define CLOCK_STYLE_SWISS_RAILROAD  "SwissRailroad"
 #define CLOCK_STYLE_HELSINKI_METRO  "HelsinkiMetro"
-
-#define DEFAULT_CLOCK_STYLE         CLOCK_STYLE_SWISS_RAILROAD
 
 class MGConfItem;
 
