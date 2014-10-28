@@ -42,14 +42,13 @@
 #include <QTimer>
 #include <QList>
 
-class QDBusPendingCallWatcher;
-
 class QuickClock: public QQuickPaintedItem
 {
     Q_OBJECT
     Q_PROPERTY(bool drawBackground READ drawBackground WRITE setDrawBackground NOTIFY drawBackgroundChanged)
     Q_PROPERTY(bool running READ running WRITE setRunning NOTIFY runningChanged)
     Q_PROPERTY(ClockSettings* settings READ settings WRITE setSettings NOTIFY settingsChanged)
+    Q_PROPERTY(QString displayStatus READ displayStatus WRITE setDisplayStatus NOTIFY displayStatusChanged)
     Q_PROPERTY(QString style READ style WRITE setStyle NOTIFY styleChanged)
 
 public:
@@ -58,6 +57,9 @@ public:
 
     ClockSettings* settings() const { return iSettings; }
     void setSettings(ClockSettings* aSettings);
+
+    QString displayStatus() const { return iDisplayStatus; }
+    void setDisplayStatus(QString aDisplayStatus);
 
     bool drawBackground() const { return iDrawBackground; }
     void setDrawBackground(bool aValue);
@@ -71,6 +73,7 @@ public:
 signals:
     void drawBackgroundChanged();
     void settingsChanged();
+    void displayStatusChanged();
     void styleChanged();
     void runningChanged();
 
@@ -80,13 +83,10 @@ protected:
 private:
     void invalidatePixmaps();
     void scheduleUpdate();
-    void setDisplayStatus(QString aStatus);
     void paintOffScreenNoSec(QPainter* aPainter, const QSize& aSize,
          const QTime& aTime);
 
 private slots:
-    void onDisplayStatusChanged(QString);
-    void onDisplayStatusQueryDone(QDBusPendingCallWatcher*);
     void onInvertColorsChanged();
     void onRepaintTimer();
 
@@ -94,6 +94,7 @@ private:
     bool iDrawBackground;
     bool iDisplayOn;
     bool iRunning;
+    QString iDisplayStatus;
     ClockTheme* iThemeDefault;
     ClockTheme* iThemeInverted;
     ClockTheme* iTheme;

@@ -16,6 +16,7 @@ SOURCES += \
     src/ClockRendererSwissRailroad.cpp \
     src/ClockSettings.cpp \
     src/ClockTheme.cpp \
+    src/DisplayStatus.cpp \
     src/QuickClock.cpp
 
 HEADERS += \
@@ -23,6 +24,7 @@ HEADERS += \
     src/ClockRenderer.h \
     src/ClockSettings.h \
     src/ClockTheme.h \
+    src/DisplayStatus.h \
     src/QuickClock.h
 
 OTHER_FILES += \

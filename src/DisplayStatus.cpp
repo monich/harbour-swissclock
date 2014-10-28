@@ -28,45 +28,62 @@
   SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include "QuickClock.h"
-#include "ClockSettings.h"
 #include "DisplayStatus.h"
 #include "ClockDebug.h"
 
-#include <QtGui>
-#include <QtQuick>
-#include <sailfishapp.h>
+#include <QDBusMessage>
+#include <QDBusConnection>
+#include <QDBusPendingCall>
+#include <QDBusPendingCallWatcher>
+#include <QDBusPendingReply>
 
-void registerClockTypes(const char* uri, int v1 = 1, int v2 = 0)
+#define MCE_SERVICE "com.nokia.mce"
+
+DisplayStatus::DisplayStatus(QObject* aParent) :
+    QObject(aParent)
 {
-    qmlRegisterType<QuickClock>(uri, v1, v2, "Clock");
-    qmlRegisterType<ClockSettings>(uri, v1, v2, "ClockSettings");
-    qmlRegisterType<DisplayStatus>(uri, v1, v2, "DisplayStatus");
+    QTRACE("- created");
+
+    // Listen for MCE display state change signals
+    QDBusConnection systemBus(QDBusConnection::systemBus());
+    systemBus.connect(MCE_SERVICE,
+         "/com/nokia/mce/signal", "com.nokia.mce.signal",
+         "display_status_ind", this, SLOT(onStatusChanged(QString)));
+
+    // And query the current state although it's rather unlikely that we
+    // have been started with display off
+    connect(new QDBusPendingCallWatcher(systemBus.asyncCall(
+        QDBusMessage::createMethodCall(MCE_SERVICE,
+        "/com/nokia/mce/request", "com.nokia.mce.request",
+        "get_display_status")), this), SIGNAL(finished(QDBusPendingCallWatcher*)),
+        this, SLOT(onStatusQueryDone(QDBusPendingCallWatcher*)));
 }
 
-int main(int argc, char *argv[])
+DisplayStatus::~DisplayStatus()
 {
-    int result = 0;
-    QGuiApplication* app = SailfishApp::application(argc, argv);
+    QTRACE("- destroyed");
+}
 
-    QTranslator* translator = new QTranslator(app);
-    QString transDir = SailfishApp::pathTo("translations").toLocalFile();
-    if (translator->load(QLocale(), "harbour-swissclock", "-", transDir)) {
-        app->installTranslator(translator);
-    } else {
-        QDEBUG("Failed to load translator for" << QLocale());
-        delete translator;
+void DisplayStatus::setStatus(QString aStatus)
+{
+    if (iStatus != aStatus) {
+        iStatus = aStatus;
+        emit statusChanged();
     }
+}
 
-    registerClockTypes("harbour.swissclock", 1, 0);
+void DisplayStatus::onStatusChanged(QString aStatus)
+{
+    QTRACE("-" << aStatus);
+    setStatus(aStatus);
+}
 
-    QQuickView *view = SailfishApp::createView();
-    view->setSource(SailfishApp::pathTo(QString("qml/main.qml")));
-    view->show();
-
-    result = app->exec();
-
-    delete view;
-    delete app;
-    return result;
+void DisplayStatus::onStatusQueryDone(QDBusPendingCallWatcher* aWatcher)
+{
+    QDBusPendingReply<QString> reply(*aWatcher);
+    QTRACE("-" << reply);
+    if (reply.isValid() && !reply.isError()) {
+        setStatus(reply.value());
+    }
+    aWatcher->deleteLater();
 }

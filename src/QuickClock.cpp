@@ -31,13 +31,6 @@
 #include "QuickClock.h"
 #include "ClockDebug.h"
 
-#include <QDBusMessage>
-#include <QDBusConnection>
-#include <QDBusPendingCall>
-#include <QDBusPendingCallWatcher>
-#include <QDBusPendingReply>
-#include <QMetaObject>
-
 #define SUPER QQuickPaintedItem
 
 #define MCE_SERVICE "com.nokia.mce"
@@ -69,20 +62,6 @@ QuickClock::QuickClock(QQuickItem* aParent) :
     iStartTime = QDateTime::currentDateTime();
 #endif // CLOCK_PERFORMANCE_LOG
     setRunning(true);
-
-    // Listen for MCE display state change signals
-    QDBusConnection systemBus(QDBusConnection::systemBus());
-    systemBus.connect(MCE_SERVICE,
-         "/com/nokia/mce/signal", "com.nokia.mce.signal",
-         "display_status_ind", this, SLOT(onDisplayStatusChanged(QString)));
-
-    // And query the current state although it's rather unlikely that we
-    // have been started with display off
-    connect(new QDBusPendingCallWatcher(systemBus.asyncCall(
-        QDBusMessage::createMethodCall(MCE_SERVICE,
-        "/com/nokia/mce/request", "com.nokia.mce.request",
-        "get_display_status")), this), SIGNAL(finished(QDBusPendingCallWatcher*)),
-        this, SLOT(onDisplayStatusQueryDone(QDBusPendingCallWatcher*)));
 }
 
 QuickClock::~QuickClock()
@@ -164,28 +143,17 @@ void QuickClock::onInvertColorsChanged()
     update();
 }
 
-void QuickClock::onDisplayStatusChanged(QString aStatus)
+void QuickClock::setDisplayStatus(QString aDisplayStatus)
 {
-    QTRACE("-" << aStatus);
-    setDisplayStatus(aStatus);
-}
-
-void QuickClock::onDisplayStatusQueryDone(QDBusPendingCallWatcher* aWatcher)
-{
-    QDBusPendingReply<QString> reply(*aWatcher);
-    QTRACE("-" << reply);
-    if (reply.isValid() && !reply.isError()) {
-        setDisplayStatus(reply.value());
-    }
-    aWatcher->deleteLater();
-}
-
-void QuickClock::setDisplayStatus(QString aStatus)
-{
-    iDisplayOn = (aStatus != "off");
-    if (iDisplayOn) {
-        QTRACE("- requesting update");
-        update();
+    QTRACE("-" << aDisplayStatus);
+    if (iDisplayStatus != aDisplayStatus) {
+        iDisplayStatus = aDisplayStatus;
+        emit displayStatusChanged();
+        iDisplayOn = (iDisplayStatus != "off");
+        if (iDisplayOn) {
+            QTRACE("- requesting update");
+            update();
+        }
     }
 }
 

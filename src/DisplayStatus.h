@@ -28,45 +28,38 @@
   SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include "QuickClock.h"
-#include "ClockSettings.h"
-#include "DisplayStatus.h"
-#include "ClockDebug.h"
+#ifndef DISPLAY_STATUS_H
+#define DISPLAY_STATUS_H
 
-#include <QtGui>
-#include <QtQuick>
-#include <sailfishapp.h>
+#include <QtQml>
 
-void registerClockTypes(const char* uri, int v1 = 1, int v2 = 0)
+class QDBusPendingCallWatcher;
+
+class DisplayStatus: public QObject
 {
-    qmlRegisterType<QuickClock>(uri, v1, v2, "Clock");
-    qmlRegisterType<ClockSettings>(uri, v1, v2, "ClockSettings");
-    qmlRegisterType<DisplayStatus>(uri, v1, v2, "DisplayStatus");
-}
+    Q_OBJECT
+    Q_PROPERTY(QString status READ status NOTIFY statusChanged)
 
-int main(int argc, char *argv[])
-{
-    int result = 0;
-    QGuiApplication* app = SailfishApp::application(argc, argv);
+public:
+    explicit DisplayStatus(QObject* aParent = NULL);
+    ~DisplayStatus();
 
-    QTranslator* translator = new QTranslator(app);
-    QString transDir = SailfishApp::pathTo("translations").toLocalFile();
-    if (translator->load(QLocale(), "harbour-swissclock", "-", transDir)) {
-        app->installTranslator(translator);
-    } else {
-        QDEBUG("Failed to load translator for" << QLocale());
-        delete translator;
-    }
+    QString status() const { return iStatus; }
 
-    registerClockTypes("harbour.swissclock", 1, 0);
+private:
+    void setStatus(QString aStatus);
 
-    QQuickView *view = SailfishApp::createView();
-    view->setSource(SailfishApp::pathTo(QString("qml/main.qml")));
-    view->show();
+signals:
+    void statusChanged();
 
-    result = app->exec();
+private slots:
+    void onStatusChanged(QString);
+    void onStatusQueryDone(QDBusPendingCallWatcher*);
 
-    delete view;
-    delete app;
-    return result;
-}
+private:
+    QString iStatus;
+};
+
+QML_DECLARE_TYPE(DisplayStatus)
+
+#endif // DISPLAY_STATUS_H

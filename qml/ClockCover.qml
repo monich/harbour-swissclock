@@ -36,7 +36,8 @@ CoverBackground {
     Clock {
         id: clock
         drawBackground: false
-        style: clockSettings.clockStyle
+        style: globalClockSettings.clockStyle
+        displayStatus: globalDisplayStatus.status
         anchors.centerIn: parent
         width: parent.width - 2*Theme.paddingMedium
         height: width

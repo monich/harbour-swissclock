@@ -35,7 +35,7 @@ import harbour.swissclock 1.0
 Page {
     id: page
     allowedOrientations: window.allowedOrientations
-    property string clockStyle: clockSettings.clockStyle
+    property string clockStyle: globalClockSettings.clockStyle
     property int initialIndex: 0
     property bool ready: false
 
@@ -98,7 +98,7 @@ Page {
             height: slideshow.height
             MouseArea {
                 anchors.fill: parent
-                onClicked: clockSettings.showNumbers = !clockSettings.showNumbers
+                onClicked: globalClockSettings.showNumbers = !globalClockSettings.showNumbers
                 onPressAndHold: { / * ignore long taps * / }
             }
             Image {
@@ -134,15 +134,16 @@ Page {
                             Clock {
                                 id: clock
                                 anchors.fill: parent
-                                settings: clockSettings
+                                settings: globalClockSettings
                                 style: getClockStyle(index)
+                                displayStatus: globalDisplayStatus.status
                                 running: (index == slideshow.currentIndex) || slideshow.moving
                             }
                             MouseArea {
                                 anchors.fill: parent
                                 onClicked: mouse.accepted = true
                                 onDoubleClicked: {
-                                    clockSettings.invertColors = !clockSettings.invertColors
+                                    globalClockSettings.invertColors = !globalClockSettings.invertColors
                                     mouse.accepted = true
                                 }
                             }
@@ -213,7 +214,7 @@ Page {
             states: [
                 State {
                     name: "showNumbers"
-                    when: ready && clockSettings.showNumbers && !slideshow.moving
+                    when: ready && globalClockSettings.showNumbers && !slideshow.moving
                     PropertyChanges { target: label1; opacity: 1 }
                     PropertyChanges { target: label2; opacity: 1 }
                     PropertyChanges { target: label3; opacity: 1 }
@@ -221,7 +222,7 @@ Page {
                 },
                 State {
                     name: "hideNumbers"
-                    when: ready && !clockSettings.showNumbers && !slideshow.moving
+                    when: ready && !globalClockSettings.showNumbers && !slideshow.moving
                     PropertyChanges { target: label1; opacity: 0 }
                     PropertyChanges { target: label2; opacity: 0 }
                     PropertyChanges { target: label3; opacity: 0 }
@@ -247,6 +248,6 @@ Page {
                 easing.type: Easing.InOutQuad
             }
         }
-        onCurrentIndexChanged: clockSettings.clockStyle = getClockStyle(currentIndex)
+        onCurrentIndexChanged: globalClockSettings.clockStyle = getClockStyle(currentIndex)
     }
 }

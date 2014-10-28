@@ -37,5 +37,6 @@ ApplicationWindow {
     allowedOrientations: Orientation.Portrait
     initialPage: Component { ClockPage {} }
     cover: Component { ClockCover {} }
-    ClockSettings { id: clockSettings }
+    ClockSettings { id: globalClockSettings }
+    DisplayStatus { id: globalDisplayStatus }
 }
