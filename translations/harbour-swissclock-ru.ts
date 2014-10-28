@@ -9,7 +9,7 @@
     </message>
     <message>
         <source>Helsinki metro</source>
-        <translation>Хельсинки (метро)</translation>
+        <translation>Хельсинки</translation>
     </message>
 </context>
 </TS>
