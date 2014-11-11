@@ -135,9 +135,10 @@ Page {
                                 id: clock
                                 anchors.fill: parent
                                 drawBackground: true
-                                invertColors: globalClockSettings.invertColors
                                 style: getClockStyle(index)
-                                displayStatus: globalDisplayStatus.status
+                                invertColors: globalClockSettings.invertColors
+                                displayStatus: globalSystemState.displayStatus
+                                lockMode: globalSystemState.lockMode
                                 running: (index == slideshow.currentIndex) || slideshow.moving
                             }
                             MouseArea {

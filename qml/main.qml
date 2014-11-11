@@ -38,5 +38,5 @@ ApplicationWindow {
     initialPage: Component { ClockPage {} }
     cover: Component { ClockCover {} }
     ClockSettings { id: globalClockSettings }
-    DisplayStatus { id: globalDisplayStatus }
+    SystemState { id: globalSystemState }
 }

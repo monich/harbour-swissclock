@@ -16,16 +16,16 @@ SOURCES += \
     src/ClockRendererSwissRailroad.cpp \
     src/ClockSettings.cpp \
     src/ClockTheme.cpp \
-    src/DisplayStatus.cpp \
-    src/QuickClock.cpp
+    src/QuickClock.cpp \
+    src/SystemState.cpp
 
 HEADERS += \
     src/ClockDebug.h \
     src/ClockRenderer.h \
     src/ClockSettings.h \
     src/ClockTheme.h \
-    src/DisplayStatus.h \
-    src/QuickClock.h
+    src/QuickClock.h \
+    src/SystemState.h
 
 OTHER_FILES += \
     qml/*.qml \

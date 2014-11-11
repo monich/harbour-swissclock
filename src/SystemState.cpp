@@ -28,7 +28,7 @@
   SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include "DisplayStatus.h"
+#include "SystemState.h"
 #include "ClockDebug.h"
 
 #include <QDBusMessage>
@@ -39,51 +39,79 @@
 
 #define MCE_SERVICE "com.nokia.mce"
 
-DisplayStatus::DisplayStatus(QObject* aParent) :
+SystemState::SystemState(QObject* aParent) :
     QObject(aParent)
 {
     QTRACE("- created");
-
-    // Listen for MCE display state change signals
-    QDBusConnection systemBus(QDBusConnection::systemBus());
-    systemBus.connect(MCE_SERVICE,
-         "/com/nokia/mce/signal", "com.nokia.mce.signal",
-         "display_status_ind", this, SLOT(onStatusChanged(QString)));
-
-    // And query the current state although it's rather unlikely that we
-    // have been started with display off
-    connect(new QDBusPendingCallWatcher(systemBus.asyncCall(
-        QDBusMessage::createMethodCall(MCE_SERVICE,
-        "/com/nokia/mce/request", "com.nokia.mce.request",
-        "get_display_status")), this), SIGNAL(finished(QDBusPendingCallWatcher*)),
-        this, SLOT(onStatusQueryDone(QDBusPendingCallWatcher*)));
+    setupProperty("get_display_status",
+        SLOT(onDisplayStatusQueryDone(QDBusPendingCallWatcher*)),
+        "display_status_ind", SLOT(onDisplayStatusChanged(QString)));
+    setupProperty("get_tklock_mode",
+        SLOT(onLockModeQueryDone(QDBusPendingCallWatcher*)),
+        "tklock_mode_ind", SLOT(onLockModeChanged(QString)));
 }
 
-DisplayStatus::~DisplayStatus()
+SystemState::~SystemState()
 {
     QTRACE("- destroyed");
 }
 
-void DisplayStatus::setStatus(QString aStatus)
+void SystemState::setupProperty(QString aQueryMethod, const char* aQuerySlot,
+    QString aSignal, const char* aSignalSlot)
 {
-    if (iStatus != aStatus) {
-        iStatus = aStatus;
-        emit statusChanged();
+    QDBusConnection systemBus(QDBusConnection::systemBus());
+    connect(new QDBusPendingCallWatcher(systemBus.asyncCall(
+        QDBusMessage::createMethodCall(MCE_SERVICE, "/com/nokia/mce/request",
+        "com.nokia.mce.request", aQueryMethod)), this),
+        SIGNAL(finished(QDBusPendingCallWatcher*)), this, aQuerySlot);
+    systemBus.connect(MCE_SERVICE, "/com/nokia/mce/signal",
+        "com.nokia.mce.signal", aSignal, this, aSignalSlot);
+}
+
+void SystemState::setDisplayStatus(QString aStatus)
+{
+    if (iDisplayStatus != aStatus) {
+        iDisplayStatus = aStatus;
+        emit displayStatusChanged();
     }
 }
 
-void DisplayStatus::onStatusChanged(QString aStatus)
+void SystemState::onDisplayStatusChanged(QString aStatus)
 {
     QTRACE("-" << aStatus);
-    setStatus(aStatus);
+    setDisplayStatus(aStatus);
 }
 
-void DisplayStatus::onStatusQueryDone(QDBusPendingCallWatcher* aWatcher)
+void SystemState::onDisplayStatusQueryDone(QDBusPendingCallWatcher* aWatcher)
 {
     QDBusPendingReply<QString> reply(*aWatcher);
     QTRACE("-" << reply);
     if (reply.isValid() && !reply.isError()) {
-        setStatus(reply.value());
+        setDisplayStatus(reply.value());
+    }
+    aWatcher->deleteLater();
+}
+
+void SystemState::setLockMode(QString aMode)
+{
+    if (iLockMode != aMode) {
+        iLockMode = aMode;
+        emit lockModeChanged();
+    }
+}
+
+void SystemState::onLockModeChanged(QString aMode)
+{
+    QTRACE("-" << aMode);
+    setLockMode(aMode);
+}
+
+void SystemState::onLockModeQueryDone(QDBusPendingCallWatcher* aWatcher)
+{
+    QDBusPendingReply<QString> reply(*aWatcher);
+    QTRACE("-" << reply);
+    if (reply.isValid() && !reply.isError()) {
+        setLockMode(reply.value());
     }
     aWatcher->deleteLater();
 }

@@ -34,13 +34,15 @@
 
 #define SUPER QQuickPaintedItem
 
-#define MCE_SERVICE "com.nokia.mce"
+#define UPDATE_INTERVAL_WITH_DISPLAY_ON  (10)
+#define UPDATE_INTERVAL_WITH_DISPLAY_OFF (200)
 
 QuickClock::QuickClock(QQuickItem* aParent) :
     SUPER(aParent),
     iInvertColors(DEFAULT_INVERT_COLORS),
     iDrawBackground(true),
-    iDisplayOn(true),
+    iDisplayOff(false),
+    iDisplayLocked(false),
     iRunning(true),
     iThemeDefault(ClockTheme::newDefault()),
     iThemeInverted(ClockTheme::newInverted()),
@@ -54,7 +56,7 @@ QuickClock::QuickClock(QQuickItem* aParent) :
     setStyle(DEFAULT_CLOCK_STYLE);
 
     iRepaintTimer->setSingleShot(true);
-    iRepaintTimer->setInterval(10);
+    iRepaintTimer->setInterval(UPDATE_INTERVAL_WITH_DISPLAY_ON);
     connect(iRepaintTimer, SIGNAL(timeout()), SLOT(onRepaintTimer()));
 
 #if CLOCK_PERFORMANCE_LOG
@@ -131,14 +133,49 @@ void QuickClock::setStyle(QString aValue)
     if (!iRenderer) iRenderer = iRenderers.at(0);
 }
 
+
+bool QuickClock::updatesEnabled() const
+{
+    return (iRunning && (!iDisplayOff || !iDisplayLocked));
+}
+
 void QuickClock::setDisplayStatus(QString aValue)
 {
     QTRACE("-" << aValue);
     if (iDisplayStatus != aValue) {
         iDisplayStatus = aValue;
         emit displayStatusChanged();
-        iDisplayOn = (iDisplayStatus != "off");
-        if (iDisplayOn) {
+        iDisplayOff = (iDisplayStatus == "off");
+        iRepaintTimer->setInterval(iDisplayOff ?
+            UPDATE_INTERVAL_WITH_DISPLAY_OFF :
+            UPDATE_INTERVAL_WITH_DISPLAY_ON);
+        if (updatesEnabled()) {
+            QTRACE("- requesting update");
+            update();
+        }
+    }
+}
+
+void QuickClock::setLockMode(QString aValue)
+{
+    QTRACE("-" << aValue);
+    if (iLockMode != aValue) {
+        iLockMode = aValue;
+        emit lockModeChanged();
+        iDisplayLocked = (iLockMode == "locked");
+        if (updatesEnabled()) {
+            QTRACE("- requesting update");
+            update();
+        }
+    }
+}
+
+void QuickClock::setRunning(bool aRunning)
+{
+    if (iRunning != aRunning) {
+        iRunning = aRunning;
+        emit runningChanged();
+        if (updatesEnabled()) {
             QTRACE("- requesting update");
             update();
         }
@@ -147,22 +184,10 @@ void QuickClock::setDisplayStatus(QString aValue)
 
 void QuickClock::onRepaintTimer()
 {
-    if (iRunning && iDisplayOn) {
+    if (updatesEnabled()) {
         update();
     } else {
         QTRACE("- stopping updates");
-    }
-}
-
-void QuickClock::setRunning(bool aRunning)
-{
-    if (iRunning != aRunning) {
-        iRunning = aRunning;
-        if (aRunning) {
-            QTRACE("- requesting update");
-            update();
-        }
-        emit runningChanged();
     }
 }
 

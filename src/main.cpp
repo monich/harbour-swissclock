@@ -30,7 +30,7 @@
 
 #include "QuickClock.h"
 #include "ClockSettings.h"
-#include "DisplayStatus.h"
+#include "SystemState.h"
 #include "ClockDebug.h"
 
 #include <QtGui>
@@ -41,7 +41,7 @@ void registerClockTypes(const char* uri, int v1 = 1, int v2 = 0)
 {
     qmlRegisterType<QuickClock>(uri, v1, v2, "Clock");
     qmlRegisterType<ClockSettings>(uri, v1, v2, "ClockSettings");
-    qmlRegisterType<DisplayStatus>(uri, v1, v2, "DisplayStatus");
+    qmlRegisterType<SystemState>(uri, v1, v2, "SystemState");
 }
 
 int main(int argc, char *argv[])

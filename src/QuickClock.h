@@ -47,6 +47,7 @@ class QuickClock: public QQuickPaintedItem
     Q_PROPERTY(bool running READ running WRITE setRunning NOTIFY runningChanged)
     Q_PROPERTY(bool invertColors READ invertColors WRITE setInvertColors NOTIFY invertColorsChanged)
     Q_PROPERTY(bool drawBackground READ drawBackground WRITE setDrawBackground NOTIFY drawBackgroundChanged)
+    Q_PROPERTY(QString lockMode READ lockMode WRITE setLockMode NOTIFY lockModeChanged)
     Q_PROPERTY(QString displayStatus READ displayStatus WRITE setDisplayStatus NOTIFY displayStatusChanged)
     Q_PROPERTY(QString style READ style WRITE setStyle NOTIFY styleChanged)
 
@@ -63,6 +64,9 @@ public:
     bool running() const { return iRunning; }
     void setRunning(bool aRunning);
 
+    QString lockMode() const { return iLockMode; }
+    void setLockMode(QString aValue);
+
     QString displayStatus() const { return iDisplayStatus; }
     void setDisplayStatus(QString aValue);
 
@@ -73,6 +77,7 @@ signals:
     void invertColorsChanged();
     void drawBackgroundChanged();
     void displayStatusChanged();
+    void lockModeChanged();
     void styleChanged();
     void runningChanged();
 
@@ -82,6 +87,7 @@ protected:
 private:
     ClockTheme* theme() const;
     void invalidatePixmaps();
+    bool updatesEnabled() const;
     void scheduleUpdate();
     void paintOffScreenNoSec(QPainter* aPainter, const QSize& aSize,
          const QTime& aTime);
@@ -92,8 +98,10 @@ private slots:
 private:
     bool iInvertColors;
     bool iDrawBackground;
-    bool iDisplayOn;
+    bool iDisplayOff;
+    bool iDisplayLocked;
     bool iRunning;
+    QString iLockMode;
     QString iDisplayStatus;
     ClockTheme* iThemeDefault;
     ClockTheme* iThemeInverted;

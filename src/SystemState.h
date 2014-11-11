@@ -28,38 +28,47 @@
   SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef DISPLAY_STATUS_H
-#define DISPLAY_STATUS_H
+#ifndef SYSTEM_STATE_H
+#define SYSTEM_STATE_H
 
 #include <QtQml>
 
 class QDBusPendingCallWatcher;
 
-class DisplayStatus: public QObject
+class SystemState: public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(QString status READ status NOTIFY statusChanged)
+    Q_PROPERTY(QString displayStatus READ displayStatus NOTIFY displayStatusChanged)
+    Q_PROPERTY(QString lockMode READ lockMode NOTIFY lockModeChanged)
 
 public:
-    explicit DisplayStatus(QObject* aParent = NULL);
-    ~DisplayStatus();
+    explicit SystemState(QObject* aParent = NULL);
+    ~SystemState();
 
-    QString status() const { return iStatus; }
+    QString displayStatus() const { return iDisplayStatus; }
+    QString lockMode() const { return iLockMode; }
 
 private:
-    void setStatus(QString aStatus);
+    void setupProperty(QString aQueryMethod, const char* aQuerySlot,
+        QString aSignal, const char* aSignalSlot);
+    void setDisplayStatus(QString aStatus);
+    void setLockMode(QString aStatus);
 
 signals:
-    void statusChanged();
+    void displayStatusChanged();
+    void lockModeChanged();
 
 private slots:
-    void onStatusChanged(QString);
-    void onStatusQueryDone(QDBusPendingCallWatcher*);
+    void onDisplayStatusChanged(QString);
+    void onDisplayStatusQueryDone(QDBusPendingCallWatcher*);
+    void onLockModeChanged(QString);
+    void onLockModeQueryDone(QDBusPendingCallWatcher*);
 
 private:
-    QString iStatus;
+    QString iDisplayStatus;
+    QString iLockMode;
 };
 
-QML_DECLARE_TYPE(DisplayStatus)
+QML_DECLARE_TYPE(SystemState)
 
-#endif // DISPLAY_STATUS_H
+#endif // SYSTEM_STATE_H
