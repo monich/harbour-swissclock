@@ -36,6 +36,7 @@ CoverBackground {
     Clock {
         id: clock
         drawBackground: false
+        invertColors: true
         style: globalClockSettings.clockStyle
         displayStatus: globalSystemState.displayStatus
         lockMode: globalSystemState.lockMode
