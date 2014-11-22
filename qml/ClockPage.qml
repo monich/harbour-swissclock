@@ -39,36 +39,14 @@ Page {
     property int initialIndex: 0
     property bool ready: false
 
-    function getClockTitle(index) {
-        if (getClockTitle["text"] === undefined) {
-            getClockTitle.text = [
-                qsTr("Swiss railroad"),
-                qsTr("Helsinki metro")
-            ]
-        }
-        return getClockTitle.text[(index + initialIndex) % clockModel.count]
-    }
-
-    function getClockStyle(index) {
-        if (getClockStyle["text"] === undefined) {
-            getClockStyle.text = [
-                "SwissRailroad",
-                "HelsinkiMetro"
-            ]
-        }
-        return getClockStyle.text[(index + initialIndex) % clockModel.count]
-    }
-
-    ListModel {
-         id: clockModel
-         ListElement { i: 0 }
-         ListElement { i: 1 }
-    }
+    readonly property var clockModel: [
+        { style: "SwissRailroad", title: qsTr("Swiss railroad") },
+        { style: "HelsinkiMetro", title: qsTr("Helsinki metro") }
+    ]
 
     Component.onCompleted: {
-        var n = clockModel.count
-        for (var i=0; i<n; i++) {
-            if (getClockStyle(i) === clockStyle) {
+        for (var i=0; i<clockModel.length; i++) {
+            if (clockModel[i].style === clockStyle) {
                 initialIndex += i
                 break
             }
@@ -79,9 +57,8 @@ Page {
 
     onClockStyleChanged: {
         if (ready) {
-            var n = clockModel.count
-            for (var i=0; i<n; i++) {
-                if (getClockStyle(i) === clockStyle) {
+            for (var i=0; i<clockModel.length; i++) {
+                if (clockModel[(i + initialIndex) % clockModel.length].style === clockStyle) {
                     slideshow.currentIndex = i
                     break
                 }
@@ -135,7 +112,7 @@ Page {
                                 id: clock
                                 anchors.fill: parent
                                 drawBackground: true
-                                style: getClockStyle(index)
+                                style: clockModel[(index + initialIndex) % clockModel.length].style
                                 invertColors: globalClockSettings.invertColors
                                 displayStatus: globalSystemState.displayStatus
                                 lockMode: globalSystemState.lockMode
@@ -170,7 +147,7 @@ Page {
                 }
                 Label {
                     id: title
-                    text: getClockTitle(index)
+                    text: clockModel[(index + initialIndex) % clockModel.length].title
                     font.pixelSize: Theme.fontSizeHuge
                     width: parent.width
                     horizontalAlignment: Text.AlignHCenter
@@ -250,6 +227,6 @@ Page {
                 easing.type: Easing.InOutQuad
             }
         }
-        onCurrentIndexChanged: globalClockSettings.clockStyle = getClockStyle(currentIndex)
+        onCurrentIndexChanged: globalClockSettings.clockStyle = clockModel[(currentIndex + initialIndex) % clockModel.length].style
     }
 }
