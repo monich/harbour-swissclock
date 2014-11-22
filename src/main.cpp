@@ -49,12 +49,15 @@ int main(int argc, char *argv[])
     int result = 0;
     QGuiApplication* app = SailfishApp::application(argc, argv);
 
+    QLocale locale;
     QTranslator* translator = new QTranslator(app);
     QString transDir = SailfishApp::pathTo("translations").toLocalFile();
-    if (translator->load(QLocale(), "harbour-swissclock", "-", transDir)) {
+    QString transFile("harbour-swissclock");
+    if (translator->load(locale, transFile, "-", transDir) ||
+        translator->load(transFile, transDir)) {
         app->installTranslator(translator);
     } else {
-        QDEBUG("Failed to load translator for" << QLocale());
+        QDEBUG("Failed to load translator for" << locale);
         delete translator;
     }
 

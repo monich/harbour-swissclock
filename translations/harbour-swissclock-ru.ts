@@ -4,11 +4,11 @@
 <context>
     <name>ClockPage</name>
     <message>
-        <source>Swiss railroad</source>
+        <source>swiss-clock-title</source>
         <translation>Швейцарские</translation>
     </message>
     <message>
-        <source>Helsinki metro</source>
+        <source>helsinki-clock-title</source>
         <translation>Хельсинки</translation>
     </message>
 </context>

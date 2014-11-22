@@ -40,8 +40,8 @@ Page {
     property bool ready: false
 
     readonly property var clockModel: [
-        { style: "SwissRailroad", title: qsTr("Swiss railroad") },
-        { style: "HelsinkiMetro", title: qsTr("Helsinki metro") }
+        { style: "SwissRailroad", title: qsTr("swiss-clock-title") },
+        { style: "HelsinkiMetro", title: qsTr("helsinki-clock-title") }
     ]
 
     Component.onCompleted: {

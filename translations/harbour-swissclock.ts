@@ -4,12 +4,12 @@
 <context>
     <name>ClockPage</name>
     <message>
-        <source>Swiss railroad</source>
-        <translation type="unfinished"></translation>
+        <source>swiss-clock-title</source>
+        <translation>Swiss railroad</translation>
     </message>
     <message>
-        <source>Helsinki metro</source>
-        <translation type="unfinished"></translation>
+        <source>helsinki-clock-title</source>
+        <translation>Helsinki metro</translation>
     </message>
 </context>
 </TS>
