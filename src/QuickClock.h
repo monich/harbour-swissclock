@@ -73,6 +73,8 @@ public:
     QString style() const { return iRenderer->id(); }
     void setStyle(QString aValue);
 
+    static QTime currentTime();
+
 signals:
     void invertColorsChanged();
     void drawBackgroundChanged();

@@ -76,6 +76,32 @@ QuickClock::~QuickClock()
     while (!iRenderers.isEmpty()) delete iRenderers.takeLast();
 }
 
+QTime QuickClock::currentTime()
+{
+#if CLOCK_DEBUG
+    static const char FIXED_TIME_UNINITIALIZED[] = "";
+    static const char* fixedTimeString = FIXED_TIME_UNINITIALIZED;
+    static QTime fixedTime;
+    if (fixedTimeString == FIXED_TIME_UNINITIALIZED) {
+        fixedTimeString = getenv("QUICK_CLOCK_TIME");
+        if (fixedTimeString) {
+            fixedTime = QTime::fromString(fixedTimeString, "h:mm:s");
+            if (!fixedTime.isValid()) {
+                fixedTime = QTime::fromString(fixedTimeString, "h:mm:s.z");
+            }
+            if (fixedTime.isValid()) {
+                qDebug() << "Fixed" << fixedTime;
+            } else {
+                qWarning() << "Invalid time string " << fixedTimeString;
+                fixedTimeString = NULL;
+            }
+        }
+    }
+    if (fixedTimeString) return fixedTime;
+#endif
+    return QTime::currentTime();
+}
+
 ClockTheme* QuickClock::theme() const
 {
     return iInvertColors ? iThemeInverted : iThemeDefault;
@@ -229,8 +255,7 @@ void QuickClock::paintOffScreenNoSec(
 
 void QuickClock::paint(QPainter* aPainter)
 {
-    QDateTime current = QDateTime::currentDateTime();
-    QTime time = current.time();
+    QTime time = currentTime();
     //QTRACE("- rendering" << qPrintable(time.toString("hh:mm:ss.zzz")));
 
     QRect backRect(0, 0, width(), height());
@@ -278,13 +303,14 @@ void QuickClock::paint(QPainter* aPainter)
     iRenderCount++;
 
 #  if CLOCK_DEBUG
-    const int ms = iStartTime.msecsTo(current);
+    QDateTime now = QDateTime::currentDateTime();
+    const int ms = iStartTime.msecsTo(now);
     if (ms >= 1000) {
         if (iRenderCount > 0) {
             QTRACE(iRenderCount*1000.0/ms << "frames per second");
             iRenderCount = 0;
         }
-        iStartTime = current;
+        iStartTime = now;
     }
 #  endif // CLOCK_DEBUG
 #endif // CLOCK_PERFORMANCE_LOG
