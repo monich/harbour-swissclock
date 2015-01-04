@@ -1,5 +1,5 @@
 /*
-  Copyright (C) 2014 Jolla Ltd.
+  Copyright (C) 2014-2015 Jolla Ltd.
   Contact: Slava Monich <slava.monich@jolla.com>
   All rights reserved.
 
@@ -184,9 +184,9 @@ HelsinkiMetro::paintSecHand(
     const qreal d = qMin(w, h);
 
     const qreal y = qMax(qreal(1), qreal(d / 195));
+    const qreal r = qMax(qreal(3), qreal(d / 23));
     const qreal x1 = -(d / 6.97);
     const qreal x2 = d / 2;
-    const qreal r = d / 23;
 
     QPainterPath path;
     path.moveTo(x1, 0);
