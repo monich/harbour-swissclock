@@ -5,7 +5,7 @@
 
 Name:       harbour-swissclock
 Summary:    Swiss Clock
-Version:    1.0.2
+Version:    1.0.3
 Release:    1
 Group:      Qt/Qt
 License:    BSD
