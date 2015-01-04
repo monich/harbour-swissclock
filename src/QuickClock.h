@@ -1,5 +1,5 @@
 /*
-  Copyright (C) 2014 Jolla Ltd.
+  Copyright (C) 2014-2015 Jolla Ltd.
   Contact: Slava Monich <slava.monich@jolla.com>
   All rights reserved.
 
@@ -36,15 +36,16 @@
 #include "ClockRenderer.h"
 #include "ClockTheme.h"
 
-#include <QQuickPaintedItem>
+#include <QQuickItem>
 #include <QDateTime>
 #include <QPainter>
 #include <QPixmap>
 #include <QTimer>
 #include <QList>
 
-class QuickClock: public QQuickPaintedItem
+class QuickClock: public QQuickItem
 {
+    class Node;
     Q_OBJECT
     Q_PROPERTY(bool running READ running WRITE setRunning NOTIFY runningChanged)
     Q_PROPERTY(bool invertColors READ invertColors WRITE setInvertColors NOTIFY invertColorsChanged)
@@ -86,15 +87,16 @@ signals:
     void runningChanged();
 
 protected:
-    virtual void paint(QPainter* aPainter);
+    QSGNode* updatePaintNode(QSGNode* aNode, UpdatePaintNodeData* aData);
 
 private:
     ClockTheme* theme() const;
-    void invalidatePixmaps();
     bool updatesEnabled() const;
     void scheduleUpdate();
     void paintOffScreenNoSec(QPainter* aPainter, const QSize& aSize,
          const QTime& aTime);
+    void repaintHourMin(const QSize& aSize, const QTime& aTime);
+    Node* createSecNode(const QSize& aSize, const QTime& aTime);
 
 private slots:
     void onRepaintTimer();
@@ -105,15 +107,16 @@ private:
     bool iDisplayOff;
     bool iDisplayLocked;
     bool iRunning;
+    bool iRepaintAll;
     QString iLockMode;
     QString iDisplayStatus;
     ClockTheme* iThemeDefault;
     ClockTheme* iThemeInverted;
     QList<ClockRenderer*> iRenderers;
     ClockRenderer* iRenderer;
-    QPixmap* iDialPlate;
-    QPixmap* iOffScreenNoSec;   // Everything except seconds
-    QTime iPaintTimeNoSec;      // When iOffScreenNoSec was painted
+    QPixmap* iDialPlatePixmap;
+    QPixmap* iHourMinPixmap;
+    QTime iPaintTimeNoSec;
     QTimer* iRepaintTimer;
 
 #define CLOCK_PERFORMANCE_LOG 0

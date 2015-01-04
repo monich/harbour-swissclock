@@ -1,5 +1,5 @@
 /*
-  Copyright (C) 2014 Jolla Ltd.
+  Copyright (C) 2014-2015 Jolla Ltd.
   Contact: Slava Monich <slava.monich@jolla.com>
   All rights reserved.
 
@@ -34,28 +34,63 @@
 #include "ClockSettings.h"
 #include "ClockDebug.h"
 
-#define SUPER QQuickPaintedItem
+#include <QQuickWindow>
+#include <QSGSimpleTextureNode>
 
 #define UPDATE_INTERVAL_WITH_DISPLAY_ON  (10)
 #define UPDATE_INTERVAL_WITH_DISPLAY_OFF (200)
 
+class QuickClock::Node : public QSGSimpleTextureNode
+{
+public:
+    Node(const QRect& aRect);
+    ~Node();
+    void update(QQuickWindow* aWindow, QImage aImage);
+private:
+    QRect iRect;
+    QImage iImage;
+};
+
+QuickClock::Node::Node(const QRect& aRect) : iRect(aRect)
+{
+    setRect(QRectF(aRect));
+    setFlag(OwnedByParent);
+}
+
+void QuickClock::Node::update(QQuickWindow* aWindow, QImage aImage)
+{
+    delete texture();
+    setTexture(aWindow->createTextureFromImage(QImage(aImage.bits() +
+        iRect.x()*aImage.depth()/8 + iRect.y()*aImage.bytesPerLine(),
+        iRect.width(), iRect.height(), aImage.bytesPerLine(),
+        aImage.format())));
+    iImage = aImage; // iImage holds the data
+}
+
+QuickClock::Node::~Node()
+{
+    delete texture();
+}
+
 QuickClock::QuickClock(QQuickItem* aParent) :
-    SUPER(aParent),
+    QQuickItem(aParent),
     iInvertColors(DEFAULT_INVERT_COLORS),
     iDrawBackground(true),
     iDisplayOff(false),
     iDisplayLocked(false),
     iRunning(true),
+    iRepaintAll(true),
     iThemeDefault(ClockTheme::newDefault()),
     iThemeInverted(ClockTheme::newInverted()),
-    iDialPlate(NULL),
-    iOffScreenNoSec(NULL),
+    iDialPlatePixmap(NULL),
+    iHourMinPixmap(NULL),
     iRepaintTimer(new QTimer(this))
 {
     QTRACE("- created");
     iRenderers.append(ClockRenderer::newSwissRailroad());
     iRenderers.append(ClockRenderer::newHelsinkiMetro());
     setStyle(DEFAULT_CLOCK_STYLE);
+    setFlags(ItemHasContents);
 
     iRepaintTimer->setSingleShot(true);
     iRepaintTimer->setInterval(UPDATE_INTERVAL_WITH_DISPLAY_ON);
@@ -71,11 +106,11 @@ QuickClock::QuickClock(QQuickItem* aParent) :
 QuickClock::~QuickClock()
 {
     QTRACE("- destroyed");
-    if (iDialPlate) delete iDialPlate;
-    if (iOffScreenNoSec) delete iOffScreenNoSec;
+    delete iDialPlatePixmap;
+    delete iHourMinPixmap;
     delete iThemeDefault;
     delete iThemeInverted;
-    while (!iRenderers.isEmpty()) delete iRenderers.takeLast();
+    qDeleteAll(iRenderers);
 }
 
 QTime QuickClock::currentTime()
@@ -109,24 +144,12 @@ ClockTheme* QuickClock::theme() const
     return iInvertColors ? iThemeInverted : iThemeDefault;
 }
 
-void QuickClock::invalidatePixmaps()
-{
-    if (iDialPlate) {
-        delete iDialPlate;
-        iDialPlate = NULL;
-    }
-    if (iOffScreenNoSec) {
-        delete iOffScreenNoSec;
-        iOffScreenNoSec = NULL;
-    }
-}
-
 void QuickClock::setInvertColors(bool aValue)
 {
     if (iInvertColors != aValue) {
         iInvertColors = aValue;
         emit invertColorsChanged();
-        invalidatePixmaps();
+        iRepaintAll = true;
         update();
     }
 }
@@ -136,7 +159,7 @@ void QuickClock::setDrawBackground(bool aValue)
     if (iDrawBackground != aValue) {
         iDrawBackground = aValue;
         emit drawBackgroundChanged();
-        invalidatePixmaps();
+        iRepaintAll = true;
         update();
     }
 }
@@ -151,7 +174,7 @@ void QuickClock::setStyle(QString aValue)
             if (iRenderer != renderer) {
                 iRenderer = renderer;
                 emit styleChanged();
-                invalidatePixmaps();
+                iRepaintAll = true;
                 update();
             }
             return;
@@ -229,23 +252,24 @@ void QuickClock::paintOffScreenNoSec(
     const QSize& aSize,
     const QTime& aTime)
 {
-    if (!iDialPlate || iDialPlate->size() != aSize) {
-        if (iDialPlate) delete iDialPlate;
-        iDialPlate = new QPixmap(aSize);
+    if (!iDialPlatePixmap || iDialPlatePixmap->size() != aSize) {
+        delete iDialPlatePixmap;
+        iDialPlatePixmap = new QPixmap(aSize);
 
         QDEBUG("drawing dial plate");
+        QPainter painter(iDialPlatePixmap);
+
         QRectF rect(QPoint(0,0), aSize);
-        QPainter painter(iDialPlate);
-        painter.setRenderHint(QPainter::Antialiasing);
-        painter.setRenderHint(QPainter::HighQualityAntialiasing);
         painter.setCompositionMode(QPainter::CompositionMode_Source);
         painter.fillRect(rect, QBrush(Qt::transparent));
-        aPainter->setCompositionMode(QPainter::CompositionMode_SourceOver);
 
+        painter.setRenderHint(QPainter::Antialiasing);
+        painter.setRenderHint(QPainter::HighQualityAntialiasing);
+        aPainter->setCompositionMode(QPainter::CompositionMode_SourceOver);
         iRenderer->paintDialPlate(&painter, aSize, theme(), iDrawBackground);
     }
 
-    aPainter->drawPixmap(0, 0, *iDialPlate);
+    aPainter->drawPixmap(0, 0, *iDialPlatePixmap);
 
     aPainter->save();
     aPainter->setRenderHint(QPainter::Antialiasing);
@@ -255,50 +279,86 @@ void QuickClock::paintOffScreenNoSec(
     aPainter->restore();
 }
 
-void QuickClock::paint(QPainter* aPainter)
+void QuickClock::repaintHourMin(const QSize& aSize, const QTime& aTime)
+{
+    delete iHourMinPixmap;
+    iHourMinPixmap = new QPixmap(aSize);
+    iHourMinPixmap->fill(Qt::transparent);
+    QPainter painter(iHourMinPixmap);
+    if (Q_UNLIKELY(aTime.second() == 0)) {
+        QTime t1 = aTime.addSecs(-1);
+        QTime t2(t1.hour(), t1.minute(), 60*t1.msec()/1000);
+        QTRACE("- drawing hour and minute hands (live)" <<
+            qPrintable(t2.toString("hh:mm:ss.zzz")));
+        paintOffScreenNoSec(&painter, aSize, t2);
+    } else {
+        QTime t1(aTime.hour(), aTime.minute(), 0);
+        QTRACE("- drawing hour and minute hands" <<
+            qPrintable(t1.toString("hh:mm:ss.zzz")));
+        paintOffScreenNoSec(&painter, aSize, t1);
+    }
+}
+
+QuickClock::Node* QuickClock::createSecNode(const QSize& aSize,
+    const QTime& aTime)
+{
+    QPixmap pixmap(aSize);
+    pixmap.fill(Qt::transparent);
+
+    QPainter painter(&pixmap);
+    painter.drawPixmap(0, 0, *iHourMinPixmap);
+    painter.setRenderHint(QPainter::Antialiasing);
+    painter.setRenderHint(QPainter::HighQualityAntialiasing);
+    painter.setCompositionMode(QPainter::CompositionMode_SourceOver);
+
+    iRenderer->paintSecHand(&painter, aSize, aTime, theme());
+
+    Node* node = new Node(QRect(QPoint(0,0), aSize));
+    node->update(window(), pixmap.toImage());
+    return node;
+}
+
+QSGNode* QuickClock::updatePaintNode(QSGNode* aNode, UpdatePaintNodeData*)
 {
     QTime time = currentTime();
     //QTRACE("- rendering" << qPrintable(time.toString("hh:mm:ss.zzz")));
 
-    QRect backRect(0, 0, width(), height());
-    QSize size = backRect.size();
+    const int w = (int)width() & ~1;
+    const int h = (int)height() & ~1;
+    QRect rect(0, 0, w, h);
+    QSize size(w, h);
 
-    aPainter->save();
-
-    if (Q_UNLIKELY(time.second() == 0)) {
-        QTime t1 = time.addSecs(-1);
-        QTime t2(t1.hour(), t1.minute(), 60*t1.msec()/1000);
-        QTRACE("- drawing hour and minute hands (live)" <<
-            qPrintable(t2.toString("hh:mm:ss.zzz")));
-        paintOffScreenNoSec(aPainter, size, t2);
-    } else {
-        if (iOffScreenNoSec == NULL ||
-            iOffScreenNoSec->size() != size ||
-            time.minute() != iPaintTimeNoSec.minute() ||
-            time.hour() != iPaintTimeNoSec.hour()) {
-
-            if (iOffScreenNoSec) delete iOffScreenNoSec;
-            iOffScreenNoSec = new QPixmap(size);
-
-            QPainter painter(iOffScreenNoSec);
-            painter.setCompositionMode(QPainter::CompositionMode_Source);
-            painter.fillRect(backRect, QBrush(Qt::transparent));
-            QTime t1(time.hour(), time.minute(), 0);
-            QTRACE("- drawing hour and minute hands" <<
-                qPrintable(t1.toString("hh:mm:ss.zzz")));
-            paintOffScreenNoSec(&painter, size, t1);
-
-            iPaintTimeNoSec = time;
-        }
-        aPainter->drawPixmap(0, 0, *iOffScreenNoSec);
+    bool updateHourMinNode = false;
+    if (iRepaintAll) {
+        iRepaintAll = false;
+        delete iDialPlatePixmap;
+        iDialPlatePixmap = NULL;
+        updateHourMinNode = true;
     }
 
-    aPainter->setRenderHint(QPainter::Antialiasing);
-    aPainter->setRenderHint(QPainter::HighQualityAntialiasing);
-    aPainter->setCompositionMode(QPainter::CompositionMode_SourceOver);
-    iRenderer->paintSecHand(aPainter, size, time, theme());
-    aPainter->restore();
+    Node* hourMinNode = (Node*)aNode;
+    if (!hourMinNode || hourMinNode->rect() != rect) {
+        delete hourMinNode;
+        aNode = hourMinNode = new Node(rect);
+        updateHourMinNode = true;
+    }
 
+    if (!updateHourMinNode &&
+       (time.second() == 0 ||
+        time.minute() != iPaintTimeNoSec.minute() ||
+        time.hour() != iPaintTimeNoSec.hour())) {
+        updateHourMinNode = true;
+    }
+
+    if (updateHourMinNode) {
+        repaintHourMin(size, time);
+        hourMinNode->update(window(), iHourMinPixmap->toImage());
+    }
+
+    delete aNode->firstChild();
+    hourMinNode->appendChildNode(createSecNode(size, time));
+
+    iPaintTimeNoSec = time;
     scheduleUpdate();
 
 #if CLOCK_PERFORMANCE_LOG
@@ -316,4 +376,6 @@ void QuickClock::paint(QPainter* aPainter)
     }
 #  endif // CLOCK_DEBUG
 #endif // CLOCK_PERFORMANCE_LOG
+
+    return aNode;
 }
