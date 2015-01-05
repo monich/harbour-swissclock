@@ -1,5 +1,5 @@
 /*
-  Copyright (C) 2014 Jolla Ltd.
+  Copyright (C) 2014-2015 Jolla Ltd.
   Contact: Slava Monich <slava.monich@jolla.com>
   All rights reserved.
 
@@ -42,6 +42,7 @@ ClockTheme* ClockTheme::newDefault()
     theme->iSecondHandColor.setRgb(255,0,0);
     theme->iHandShadowColor1.setRgb(228,228,228,0x40);
     theme->iHandShadowColor2.setRgb(228,228,228,0x80);
+    theme->iDialShadowColor.setRgb(43,43,43,0x40);
     return theme;
 }
 
@@ -55,5 +56,6 @@ ClockTheme* ClockTheme::newInverted()
     theme->iSecondHandColor.setRgb(255,0,0);
     theme->iHandShadowColor1.setRgb(43,43,43,0x80);
     theme->iHandShadowColor2.setRgb(43,43,43,0x40);
+    theme->iDialShadowColor.setRgb(228,228,228,0x40);
     return theme;
 }

@@ -1,5 +1,5 @@
 /*
-  Copyright (C) 2014 Jolla Ltd.
+  Copyright (C) 2014-2015 Jolla Ltd.
   Contact: Slava Monich <slava.monich@jolla.com>
   All rights reserved.
 
@@ -44,6 +44,7 @@ public:
     QColor iSecondHandColor;
     QColor iHandShadowColor1;
     QColor iHandShadowColor2;
+    QColor iDialShadowColor;
 
     static ClockTheme* newDefault();
     static ClockTheme* newInverted();

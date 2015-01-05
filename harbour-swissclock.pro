@@ -12,6 +12,7 @@ CONFIG(debug, debug|release) {
 SOURCES += \
     src/main.cpp \
     src/ClockRenderer.cpp \
+    src/ClockRendererDeutscheBahn.cpp \
     src/ClockRendererHelsinkiMetro.cpp \
     src/ClockRendererSwissRailroad.cpp \
     src/ClockSettings.cpp \

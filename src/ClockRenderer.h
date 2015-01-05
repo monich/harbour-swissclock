@@ -1,5 +1,5 @@
 /*
-  Copyright (C) 2014 Jolla Ltd.
+  Copyright (C) 2014-2015 Jolla Ltd.
   Contact: Slava Monich <slava.monich@jolla.com>
   All rights reserved.
 
@@ -53,8 +53,9 @@ public:
     QString id() const { return iId; }
 
 public:
-    static ClockRenderer* newSwissRailroad();
+    static ClockRenderer* newDeutscheBahn();
     static ClockRenderer* newHelsinkiMetro();
+    static ClockRenderer* newSwissRailroad();
 
 protected:
     ClockRenderer(QString aId);

@@ -1,5 +1,5 @@
 /*
-  Copyright (C) 2014 Jolla Ltd.
+  Copyright (C) 2014-2015 Jolla Ltd.
   Contact: Slava Monich <slava.monich@jolla.com>
   All rights reserved.
 
@@ -41,7 +41,8 @@ Page {
 
     readonly property var clockModel: [
         { style: "SwissRailroad", title: qsTr("swiss-clock-title") },
-        { style: "HelsinkiMetro", title: qsTr("helsinki-clock-title") }
+        { style: "HelsinkiMetro", title: qsTr("helsinki-clock-title") },
+        { style: "DeutscheBahn", title: qsTr("deutschebahn-clock-title") }
     ]
 
     Component.onCompleted: {
