@@ -35,7 +35,6 @@
 class DeutscheBahn : public ClockRenderer
 {
 public:
-    DeutscheBahn() : ClockRenderer("DeutscheBahn") {}
     virtual void paintDialPlate(QPainter* aPainter, const QSize& aSize,
         ClockTheme* aTheme, bool aDrawBackground);
     virtual void paintHourMinHands(QPainter* aPainter, const QSize& aSize,
@@ -45,6 +44,11 @@ public:
     static void paintHand(QPainter* aPainter, const QRectF& aRect,
         qreal aAngle, const QBrush& aBrush,
         qreal aX = 0.0, qreal aY = 0.0);
+
+    DeutscheBahn() : ClockRenderer("DeutscheBahn"),
+        iSecondHandColor(192,48,48) {}
+private:
+    QColor iSecondHandColor;
 };
 
 ClockRenderer*
@@ -207,7 +211,7 @@ DeutscheBahn::paintSecHand(
     aPainter->setPen(shadowPen);
     aPainter->drawEllipse(QPointF(x2,0), r, r);
 
-    QBrush secBrush(aTheme->iSecondHandColor);
+    QBrush secBrush(iSecondHandColor);
     QPen secPen(secBrush, dr);
     aPainter->setPen(Qt::NoPen);
     aPainter->setBrush(secBrush);

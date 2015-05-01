@@ -37,7 +37,6 @@
 class HelsinkiMetro : public ClockRenderer
 {
 public:
-    HelsinkiMetro() : ClockRenderer("HelsinkiMetro") {}
     virtual void paintDialPlate(QPainter* aPainter, const QSize& aSize,
         ClockTheme* aTheme, bool aDrawBackground);
     virtual void paintHourMinHands(QPainter* aPainter, const QSize& aSize,
@@ -47,6 +46,11 @@ public:
     static void paintHand(QPainter* aPainter, const QRectF& aRect,
         qreal aAngle, const QBrush& aBrush,
         qreal aX = 0.0, qreal aY = 0.0);
+
+    HelsinkiMetro() : ClockRenderer("HelsinkiMetro"),
+        iSecondHandColor(255,0,0) {}
+private:
+    QColor iSecondHandColor;
 };
 
 ClockRenderer*
@@ -197,7 +201,7 @@ HelsinkiMetro::paintSecHand(
     path.lineTo(x1+y, y);
     path.closeSubpath();
 
-    QBrush secBrush(aTheme->iSecondHandColor);
+    QBrush secBrush(iSecondHandColor);
     QPointF center(0,0);
 
     aPainter->save();

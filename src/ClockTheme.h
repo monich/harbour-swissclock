@@ -41,7 +41,6 @@ public:
     QColor iBackgroundColor1;
     QColor iBackgroundColor2;
     QColor iHourMinHandColor;
-    QColor iSecondHandColor;
     QColor iHandShadowColor1;
     QColor iHandShadowColor2;
     QColor iDialShadowColor;

@@ -1,5 +1,5 @@
 /*
-  Copyright (C) 2014 Jolla Ltd.
+  Copyright (C) 2014-2015 Jolla Ltd.
   Contact: Slava Monich <slava.monich@jolla.com>
   All rights reserved.
 
@@ -35,7 +35,6 @@
 class SwissRailroad : public ClockRenderer
 {
 public:
-    SwissRailroad() : ClockRenderer("SwissRailroad") {}
     virtual void paintDialPlate(QPainter* aPainter, const QSize& aSize,
         ClockTheme* aTheme, bool aDrawBackground);
     virtual void paintHourMinHands(QPainter* aPainter, const QSize& aSize,
@@ -45,6 +44,11 @@ public:
     static void paintHand(QPainter* aPainter, const QRectF& aRect,
         qreal aAngle, const QBrush& aBrush,
         qreal aX = 0.0, qreal aY = 0.0);
+
+    SwissRailroad() : ClockRenderer("SwissRailroad"),
+        iSecondHandColor(255,0,0) {}
+private:
+    QColor iSecondHandColor;
 };
 
 ClockRenderer*
@@ -175,7 +179,7 @@ SwissRailroad::paintSecHand(
     const qreal xs1 = xh1 + d / 140;
     const qreal xs2 = x1 - d / 50 - rs2;
     QRectF secHandRect(xs1, -ds/2.0, (xs2-xs1), ds);
-    QBrush secBrush(aTheme->iSecondHandColor);
+    QBrush secBrush(iSecondHandColor);
 
     aPainter->save();
     aPainter->setPen(Qt::NoPen);
