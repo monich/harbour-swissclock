@@ -46,7 +46,7 @@ public:
         qreal aX = 0.0, qreal aY = 0.0);
 
     DeutscheBahn() : ClockRenderer("DeutscheBahn"),
-        iSecondHandColor(192,48,48) {}
+        iSecondHandColor(255,32,32) {}
 private:
     QColor iSecondHandColor;
 };
@@ -130,7 +130,7 @@ DeutscheBahn::paintHourMinHands(
     // Draw hands
     const qreal d = qMin(aSize.width(),aSize.height());
     const qreal ym = qMax(d * qreal(0.018), qreal(1));
-    const qreal yh = qMax(d * qreal(0.028), qreal(2));
+    const qreal yh = qMax(d * qreal(0.024), qreal(2));
     const qreal xm = d * 0.466;
     const qreal xh = d * 0.3;
     QRectF hourHandRect(0, -yh, xh, 2*yh);
