@@ -1,6 +1,6 @@
 Name:       harbour-swissclock
 Summary:    Swiss Clock
-Version:    1.0.3
+Version:    1.0.4
 Release:    1
 Group:      Applications/Productivity
 License:    BSD
