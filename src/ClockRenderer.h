@@ -53,9 +53,13 @@ public:
     QString id() const { return iId; }
 
 public:
-    static ClockRenderer* newDeutscheBahn();
-    static ClockRenderer* newHelsinkiMetro();
+    static const QString SWISS_RAILROAD;
+    static const QString HELSINKI_METRO;
+    static const QString DEUTSCHE_BAHN;
+
     static ClockRenderer* newSwissRailroad();
+    static ClockRenderer* newHelsinkiMetro();
+    static ClockRenderer* newDeutscheBahn();
 
 protected:
     ClockRenderer(QString aId);

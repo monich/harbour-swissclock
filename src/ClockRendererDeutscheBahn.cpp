@@ -32,6 +32,8 @@
 
 #include "ClockRenderer.h"
 
+const QString ClockRenderer::DEUTSCHE_BAHN("DeutscheBahn");
+
 class DeutscheBahn : public ClockRenderer
 {
 public:
@@ -45,7 +47,7 @@ public:
         qreal aAngle, const QBrush& aBrush,
         qreal aX = 0.0, qreal aY = 0.0);
 
-    DeutscheBahn() : ClockRenderer("DeutscheBahn"),
+    DeutscheBahn() : ClockRenderer(DEUTSCHE_BAHN),
         iSecondHandColor(255,32,32) {}
 private:
     QColor iSecondHandColor;

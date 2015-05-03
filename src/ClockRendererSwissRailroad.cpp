@@ -32,6 +32,8 @@
 
 #include "ClockRenderer.h"
 
+const QString ClockRenderer::SWISS_RAILROAD("SwissRailroad");
+
 class SwissRailroad : public ClockRenderer
 {
 public:
@@ -45,7 +47,7 @@ public:
         qreal aAngle, const QBrush& aBrush,
         qreal aX = 0.0, qreal aY = 0.0);
 
-    SwissRailroad() : ClockRenderer("SwissRailroad"),
+    SwissRailroad() : ClockRenderer(SWISS_RAILROAD),
         iSecondHandColor(255,0,0) {}
 private:
     QColor iSecondHandColor;

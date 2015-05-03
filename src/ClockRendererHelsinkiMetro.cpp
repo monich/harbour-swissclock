@@ -32,7 +32,7 @@
 
 #include "ClockRenderer.h"
 
-#include <QPainterPath>
+const QString ClockRenderer::HELSINKI_METRO("HelsinkiMetro");
 
 class HelsinkiMetro : public ClockRenderer
 {
@@ -47,7 +47,7 @@ public:
         qreal aAngle, const QBrush& aBrush,
         qreal aX = 0.0, qreal aY = 0.0);
 
-    HelsinkiMetro() : ClockRenderer("HelsinkiMetro"),
+    HelsinkiMetro() : ClockRenderer(HELSINKI_METRO),
         iSecondHandColor(255,0,0) {}
 private:
     QColor iSecondHandColor;
