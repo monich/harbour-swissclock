@@ -5,7 +5,6 @@ Release:    1
 Group:      Applications/Productivity
 License:    BSD
 URL:        https://github.com/monich/harbour-swissclock
-Vendor:     Slava Monich
 Source0:    %{name}-%{version}.tar.bz2
 
 %{!?qtc_qmake:%define qtc_qmake %qmake}
