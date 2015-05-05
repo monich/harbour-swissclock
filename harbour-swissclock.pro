@@ -2,7 +2,7 @@ TARGET = harbour-swissclock
 CONFIG += sailfishapp
 CONFIG += link_pkgconfig
 PKGCONFIG += mlite5 sailfishapp
-QMAKE_CXXFLAGS += -Wno-unused-parameter
+QMAKE_CXXFLAGS += -Wno-unused-parameter -Wno-psabi
 QT += dbus
 
 CONFIG(debug, debug|release) {
