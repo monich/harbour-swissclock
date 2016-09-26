@@ -6,7 +6,8 @@ QMAKE_CXXFLAGS += -Wno-unused-parameter -Wno-psabi
 QT += dbus
 
 CONFIG(debug, debug|release) {
-  DEFINES += CLOCK_DEBUG=1
+  QMAKE_CXXFLAGS += -g -O0
+  DEFINES += CLOCK_DEBUG
 }
 
 SOURCES += \
@@ -18,6 +19,7 @@ SOURCES += \
     src/ClockSettings.cpp \
     src/ClockTheme.cpp \
     src/QuickClock.cpp \
+    src/QuickClockSeconds.cpp \
     src/SystemState.cpp
 
 HEADERS += \
@@ -26,6 +28,7 @@ HEADERS += \
     src/ClockSettings.h \
     src/ClockTheme.h \
     src/QuickClock.h \
+    src/QuickClockSeconds.h \
     src/SystemState.h
 
 OTHER_FILES += \

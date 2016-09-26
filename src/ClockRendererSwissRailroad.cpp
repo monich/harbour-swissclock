@@ -1,62 +1,77 @@
 /*
-  Copyright (C) 2014-2015 Jolla Ltd.
-  Contact: Slava Monich <slava.monich@jolla.com>
-
-  You may use this file under the terms of BSD license as follows:
-
-  Redistribution and use in source and binary forms, with or without
-  modification, are permitted provided that the following conditions
-  are met:
-
-    * Redistributions of source code must retain the above copyright
-      notice, this list of conditions and the following disclaimer.
-    * Redistributions in binary form must reproduce the above copyright
-      notice, this list of conditions and the following disclaimer in the
-      documentation and/or other materials provided with the distribution.
-    * Neither the name of the Jolla Ltd nor the
-      names of its contributors may be used to endorse or promote products
-      derived from this software without specific prior written permission.
-
-  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDERS OR CONTRIBUTORS
-  BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
-  THE POSSIBILITY OF SUCH DAMAGE.
-*/
+ * Copyright (C) 2014-2016 Jolla Ltd.
+ * Contact: Slava Monich <slava.monich@jolla.com>
+ *
+ * You may use this file under the terms of the BSD license as follows:
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *   - Redistributions of source code must retain the above copyright
+ *     notice, this list of conditions and the following disclaimer.
+ *   - Redistributions in binary form must reproduce the above copyright
+ *     notice, this list of conditions and the following disclaimer in
+ *     the documentation and/or other materials provided with the
+ *     distribution.
+ *   - Neither the name of Jolla Ltd nor the names of its contributors
+ *     may be used to endorse or promote products derived from this
+ *     software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
 
 #include "ClockRenderer.h"
+#include "ClockDebug.h"
 
 const QString ClockRenderer::SWISS_RAILROAD("SwissRailroad");
 
 class SwissRailroad : public ClockRenderer
 {
 public:
+    SwissRailroad();
     virtual void paintDialPlate(QPainter* aPainter, const QSize& aSize,
         ClockTheme* aTheme, bool aDrawBackground);
     virtual void paintHourMinHands(QPainter* aPainter, const QSize& aSize,
         const QTime& aTime, ClockTheme* aTheme);
     virtual void paintSecHand(QPainter* aPainter, const QSize& aSize,
         const QTime& aTime, ClockTheme* aTheme);
+    virtual void initSecNode(QSGTransformNode* aTxNode, const QSizeF& aSize,
+        QQuickWindow* aWindow, ClockTheme* aTheme);
+
     static void paintHand(QPainter* aPainter, const QRectF& aRect,
         qreal aAngle, const QBrush& aBrush,
         qreal aX = 0.0, qreal aY = 0.0);
 
-    SwissRailroad() : ClockRenderer(SWISS_RAILROAD),
-        iSecondHandColor(255,0,0) {}
-private:
     QColor iSecondHandColor;
+    QBrush iSecondHandBrush;
+    QBrush iBlack;
+    QBrush iWhite;
 };
 
 ClockRenderer*
 ClockRenderer::newSwissRailroad()
 {
     return new SwissRailroad;
+}
+
+SwissRailroad::SwissRailroad() :
+    ClockRenderer(SWISS_RAILROAD),
+    iSecondHandColor(255, 0, 0),
+    iSecondHandBrush(iSecondHandColor, Qt::SolidPattern),
+    iBlack(Qt::black),
+    iWhite(Qt::white)
+{
 }
 
 void
@@ -181,19 +196,56 @@ SwissRailroad::paintSecHand(
     const qreal xs1 = xh1 + d / 140;
     const qreal xs2 = x1 - d / 50 - rs2;
     QRectF secHandRect(xs1, -ds/2.0, (xs2-xs1), ds);
-    QBrush secBrush(iSecondHandColor);
 
     aPainter->save();
     aPainter->setPen(Qt::NoPen);
-    aPainter->setBrush(secBrush);
+    aPainter->setBrush(iSecondHandBrush);
     aPainter->translate(w/2, h/2);
     aPainter->rotate(6.0 * (aTime.second() + aTime.msec()/1000.0) - 90);
-    aPainter->fillRect(secHandRect, secBrush);
+    aPainter->fillRect(secHandRect, iSecondHandBrush);
     aPainter->drawEllipse(center, rs1, rs1);
     aPainter->drawEllipse(QPointF(xs2,0), rs2, rs2);
-    aPainter->setBrush(QBrush(Qt::white));
+    aPainter->setBrush(iWhite);
     aPainter->drawEllipse(center, 2, 2);
-    aPainter->setBrush(QBrush(Qt::black));
+    aPainter->setBrush(iBlack);
     aPainter->drawEllipse(center, 1, 1);
     aPainter->restore();
+}
+
+void
+SwissRailroad::initSecNode(
+    QSGTransformNode* aTxNode,
+    const QSizeF& aSize,
+    QQuickWindow* aWindow,
+    ClockTheme* aTheme)
+{
+    const qreal w = aSize.width();
+    const qreal h = aSize.height();
+    const qreal d = qMin(w, h);
+    const qreal x0 = w/2;
+    const qreal y0 = h/2;
+
+    // Draw the second hand
+    const qreal rs = qMax(d / 50, qreal(5));
+    const qreal x1 = x0 + d * 10 / 27;
+    const qreal xh1 = x0 - (d * 10 / 74);
+
+    const qreal rs2 = d/26;
+    const qreal ds = rs-3;
+    const qreal xs1 = xh1 + d / 140;
+    const qreal xs2 = x1 - d / 50 - rs2;
+
+    QDEBUG("initializing" << qPrintable(id()) << "node");
+    QSGGeometry* g = new QSGGeometry(QSGGeometry::defaultAttributes_Point2D(), 4);
+    QSGGeometry::Point2D* v = g->vertexDataAsPoint2D();
+    g->setDrawingMode(GL_TRIANGLE_FAN);
+    v[0].x = xs1;  v[0].y = y0 - ds/2.0;
+    v[1].x = xs1;  v[1].y = y0 + ds/2.0;
+    v[2].x = xs2;  v[2].y = v[1].y;
+    v[3].x = xs2;  v[3].y = v[0].y;
+    aTxNode->appendChildNode(geometryNode(g, iSecondHandColor));
+    aTxNode->appendChildNode(circleNode(QPointF(xs2, y0), rs2, iSecondHandColor));
+
+    QPointF center(x0,y0);
+    aTxNode->parent()->appendChildNode(new CenterDiskNode(aWindow, center, iSecondHandColor, rs));
 }

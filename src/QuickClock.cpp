@@ -1,36 +1,38 @@
 /*
-  Copyright (C) 2014-2015 Jolla Ltd.
-  Contact: Slava Monich <slava.monich@jolla.com>
-
-  You may use this file under the terms of BSD license as follows:
-
-  Redistribution and use in source and binary forms, with or without
-  modification, are permitted provided that the following conditions
-  are met:
-
-    * Redistributions of source code must retain the above copyright
-      notice, this list of conditions and the following disclaimer.
-    * Redistributions in binary form must reproduce the above copyright
-      notice, this list of conditions and the following disclaimer in the
-      documentation and/or other materials provided with the distribution.
-    * Neither the name of the Jolla Ltd nor the
-      names of its contributors may be used to endorse or promote products
-      derived from this software without specific prior written permission.
-
-  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDERS OR CONTRIBUTORS
-  BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
-  THE POSSIBILITY OF SUCH DAMAGE.
-*/
+ * Copyright (C) 2014-2016 Jolla Ltd.
+ * Contact: Slava Monich <slava.monich@jolla.com>
+ *
+ * You may use this file under the terms of the BSD license as follows:
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *   - Redistributions of source code must retain the above copyright
+ *     notice, this list of conditions and the following disclaimer.
+ *   - Redistributions in binary form must reproduce the above copyright
+ *     notice, this list of conditions and the following disclaimer in
+ *     the documentation and/or other materials provided with the
+ *     distribution.
+ *   - Neither the name of Jolla Ltd nor the names of its contributors
+ *     may be used to endorse or promote products derived from this
+ *     software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
 
 #include "QuickClock.h"
+#include "QuickClockSeconds.h"
 #include "ClockSettings.h"
 #include "ClockDebug.h"
 
@@ -39,6 +41,8 @@
 
 #define UPDATE_INTERVAL_WITH_DISPLAY_ON  (10)
 #define UPDATE_INTERVAL_WITH_DISPLAY_OFF (200)
+#define AUTO_OPTIMIZE_SIZE (300)
+//#define AUTO_OPTIMIZE_SIZE (550)
 
 class QuickClock::Node : public QSGSimpleTextureNode
 {
@@ -74,33 +78,39 @@ QuickClock::Node::~Node()
 
 QuickClock::QuickClock(QQuickItem* aParent) :
     QQuickItem(aParent),
+    iRenderType(DEFAULT_RENDER_TYPE),
     iInvertColors(DEFAULT_INVERT_COLORS),
     iDrawBackground(true),
+    iOptimized(false),
     iDisplayOff(false),
     iDisplayLocked(false),
     iRunning(true),
     iRepaintAll(true),
     iThemeDefault(ClockTheme::newDefault()),
     iThemeInverted(ClockTheme::newInverted()),
+    iRenderer(NULL),
+    iSecLayer(NULL),
     iDialPlatePixmap(NULL),
     iHourMinPixmap(NULL),
-    iRepaintTimer(new QTimer(this))
+    iRepaintTimer(new QTimer(this)),
+    iPaintHour(0),
+    iPaintMinute(0)
 {
     QTRACE("- created");
+    setFlags(ItemHasContents);
+
     iRenderers.append(ClockRenderer::newSwissRailroad());
     iRenderers.append(ClockRenderer::newHelsinkiMetro());
     iRenderers.append(ClockRenderer::newDeutscheBahn());
     setStyle(DEFAULT_CLOCK_STYLE);
-    setFlags(ItemHasContents);
 
     iRepaintTimer->setSingleShot(true);
     iRepaintTimer->setInterval(UPDATE_INTERVAL_WITH_DISPLAY_ON);
     connect(iRepaintTimer, SIGNAL(timeout()), SLOT(onRepaintTimer()));
 
-#if CLOCK_PERFORMANCE_LOG
-    iRenderCount = 0;
-    iStartTime = QDateTime::currentDateTime();
-#endif // CLOCK_PERFORMANCE_LOG
+    connect(this, SIGNAL(widthChanged()), SLOT(onWidthChanged()));
+    connect(this, SIGNAL(heightChanged()), SLOT(onHeightChanged()));
+    updateRenderingType();
     setRunning(true);
 }
 
@@ -145,13 +155,22 @@ ClockTheme* QuickClock::theme() const
     return iInvertColors ? iThemeInverted : iThemeDefault;
 }
 
+void QuickClock::invalidatePixmaps()
+{
+    iRepaintAll = true;
+    if (iSecLayer) {
+        iSecLayer->setDirty();
+    }
+}
+
 void QuickClock::setInvertColors(bool aValue)
 {
     if (iInvertColors != aValue) {
         iInvertColors = aValue;
-        emit invertColorsChanged();
+        Q_EMIT invertColorsChanged();
         iRepaintAll = true;
-        update();
+        QTRACE("- requesting update");
+        requestUpdate(true);
     }
 }
 
@@ -159,9 +178,10 @@ void QuickClock::setDrawBackground(bool aValue)
 {
     if (iDrawBackground != aValue) {
         iDrawBackground = aValue;
-        emit drawBackgroundChanged();
+        Q_EMIT drawBackgroundChanged();
         iRepaintAll = true;
-        update();
+        QTRACE("- requesting update");
+        requestUpdate(true);
     }
 }
 
@@ -174,9 +194,10 @@ void QuickClock::setStyle(QString aValue)
             QTRACE("style = " << aValue);
             if (iRenderer != renderer) {
                 iRenderer = renderer;
-                emit styleChanged();
+                Q_EMIT styleChanged();
                 iRepaintAll = true;
-                update();
+                QTRACE("- requesting update");
+                requestUpdate(true);
             }
             return;
         }
@@ -196,14 +217,14 @@ void QuickClock::setDisplayStatus(QString aValue)
     QTRACE("-" << aValue);
     if (iDisplayStatus != aValue) {
         iDisplayStatus = aValue;
-        emit displayStatusChanged();
+        Q_EMIT displayStatusChanged();
         iDisplayOff = (iDisplayStatus == "off");
         iRepaintTimer->setInterval(iDisplayOff ?
             UPDATE_INTERVAL_WITH_DISPLAY_OFF :
             UPDATE_INTERVAL_WITH_DISPLAY_ON);
         if (updatesEnabled()) {
             QTRACE("- requesting update");
-            update();
+            requestUpdate(false);
         }
     }
 }
@@ -213,12 +234,31 @@ void QuickClock::setLockMode(QString aValue)
     QTRACE("-" << aValue);
     if (iLockMode != aValue) {
         iLockMode = aValue;
-        emit lockModeChanged();
+        Q_EMIT lockModeChanged();
         iDisplayLocked = (iLockMode == "locked");
         if (updatesEnabled()) {
             QTRACE("- requesting update");
-            update();
+            requestUpdate(false);
         }
+    }
+}
+
+void QuickClock::setRenderType(int aValue)
+{
+    ClockSettings::RenderType renderType = DEFAULT_RENDER_TYPE;
+    switch ((ClockSettings::RenderType)aValue) {
+    case ClockSettings::RenderAuto:
+    case ClockSettings::RenderSpeed:
+    case ClockSettings::RenderQuality:
+        renderType = (ClockSettings::RenderType)aValue;
+        break;
+    }
+
+    QTRACE("-" << aValue);
+    if (iRenderType != renderType) {
+        iRenderType = renderType;
+        updateRenderingType();
+        Q_EMIT renderTypeChanged();
     }
 }
 
@@ -226,20 +266,78 @@ void QuickClock::setRunning(bool aRunning)
 {
     if (iRunning != aRunning) {
         iRunning = aRunning;
-        emit runningChanged();
+        Q_EMIT runningChanged();
         if (updatesEnabled()) {
             QTRACE("- requesting update");
-            update();
+            requestUpdate(false);
         }
     }
+}
+
+void QuickClock::updateRenderingType()
+{
+    bool optimized = iOptimized;
+    switch (iRenderType) {
+    case ClockSettings::RenderAuto:
+        optimized = width() > AUTO_OPTIMIZE_SIZE ||
+                    height() > AUTO_OPTIMIZE_SIZE;
+        break;
+    case ClockSettings::RenderSpeed:
+        optimized = true;
+        break;
+    case ClockSettings::RenderQuality:
+        optimized = false;
+        break;
+    }
+    if (iOptimized != optimized) {
+        iOptimized = optimized;
+        QTRACE("- switched to" << (optimized ? "optimized" : "non-optimized"));
+        if (iOptimized) {
+            iSecLayer = new QuickClockSeconds(this);
+        } else {
+            delete iSecLayer;
+            iSecLayer = NULL;
+        }
+        requestUpdate(true);
+    }
+}
+
+void QuickClock::onWidthChanged()
+{
+    QTRACE(width());
+    updateRenderingType();
+}
+
+void QuickClock::onHeightChanged()
+{
+    QTRACE(height());
+    updateRenderingType();
 }
 
 void QuickClock::onRepaintTimer()
 {
     if (updatesEnabled()) {
-        update();
+        requestUpdate(false);
     } else {
         QTRACE("- stopping updates");
+    }
+}
+
+void QuickClock::requestUpdate(bool aFullUpdate)
+{
+    if (Q_UNLIKELY(aFullUpdate)) {
+        invalidatePixmaps();
+        update();
+    } else {
+        QTime time = currentTime();
+        if (time.second() == 0 ||
+            time.minute() != iPaintMinute ||
+            time.hour() != iPaintHour) {
+            update();
+        }
+    }
+    if (iSecLayer) {
+        iSecLayer->update();
     }
 }
 
@@ -300,7 +398,7 @@ void QuickClock::repaintHourMin(const QSize& aSize, const QTime& aTime)
     }
 }
 
-QuickClock::Node* QuickClock::createSecNode(const QSize& aSize,
+QuickClock::Node* QuickClock::paintSecNode(const QSize& aSize,
     const QTime& aTime)
 {
     QPixmap pixmap(aSize);
@@ -357,26 +455,17 @@ QSGNode* QuickClock::updatePaintNode(QSGNode* aNode, UpdatePaintNodeData*)
     }
 
     delete aNode->firstChild();
-    hourMinNode->appendChildNode(createSecNode(size, time));
+    if (!iOptimized) {
+        hourMinNode->appendChildNode(paintSecNode(size, time));
+    }
 
     iPaintTimeNoSec = time;
     scheduleUpdate();
 
-#if CLOCK_PERFORMANCE_LOG
-    iRenderCount++;
-
-#  if CLOCK_DEBUG
-    QDateTime now = QDateTime::currentDateTime();
-    const int ms = iStartTime.msecsTo(now);
-    if (ms >= 1000) {
-        if (iRenderCount > 0) {
-            QTRACE(iRenderCount*1000.0/ms << "frames per second");
-            iRenderCount = 0;
-        }
-        iStartTime = now;
+#ifdef CLOCK_PERFORMANCE_LOG_ENABLED
+    if (!iOptimized) {
+        CLOCK_PERFORMANCE_LOG_RECORD;
     }
-#  endif // CLOCK_DEBUG
-#endif // CLOCK_PERFORMANCE_LOG
-
+#endif
     return aNode;
 }

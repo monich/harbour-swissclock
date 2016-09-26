@@ -1,40 +1,43 @@
 /*
-  Copyright (C) 2014-2015 Jolla Ltd.
-  Contact: Slava Monich <slava.monich@jolla.com>
-
-  You may use this file under the terms of BSD license as follows:
-
-  Redistribution and use in source and binary forms, with or without
-  modification, are permitted provided that the following conditions
-  are met:
-
-    * Redistributions of source code must retain the above copyright
-      notice, this list of conditions and the following disclaimer.
-    * Redistributions in binary form must reproduce the above copyright
-      notice, this list of conditions and the following disclaimer in the
-      documentation and/or other materials provided with the distribution.
-    * Neither the name of the Jolla Ltd nor the
-      names of its contributors may be used to endorse or promote products
-      derived from this software without specific prior written permission.
-
-  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDERS OR CONTRIBUTORS
-  BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
-  THE POSSIBILITY OF SUCH DAMAGE.
-*/
+ * Copyright (C) 2014-2016 Jolla Ltd.
+ * Contact: Slava Monich <slava.monich@jolla.com>
+ *
+ * You may use this file under the terms of the BSD license as follows:
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *   - Redistributions of source code must retain the above copyright
+ *     notice, this list of conditions and the following disclaimer.
+ *   - Redistributions in binary form must reproduce the above copyright
+ *     notice, this list of conditions and the following disclaimer in
+ *     the documentation and/or other materials provided with the
+ *     distribution.
+ *   - Neither the name of Jolla Ltd nor the names of its contributors
+ *     may be used to endorse or promote products derived from this
+ *     software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
 
 #ifndef QUICK_CLOCK_H
 #define QUICK_CLOCK_H
 
 #include "ClockRenderer.h"
+#include "ClockSettings.h"
 #include "ClockTheme.h"
+#include "ClockDebug.h"
 
 #include <QQuickItem>
 #include <QDateTime>
@@ -43,6 +46,8 @@
 #include <QTimer>
 #include <QList>
 
+class QuickClockSeconds;
+
 class QuickClock: public QQuickItem
 {
     class Node;
@@ -50,6 +55,7 @@ class QuickClock: public QQuickItem
     Q_PROPERTY(bool running READ running WRITE setRunning NOTIFY runningChanged)
     Q_PROPERTY(bool invertColors READ invertColors WRITE setInvertColors NOTIFY invertColorsChanged)
     Q_PROPERTY(bool drawBackground READ drawBackground WRITE setDrawBackground NOTIFY drawBackgroundChanged)
+    Q_PROPERTY(int renderType READ renderType WRITE setRenderType NOTIFY renderTypeChanged)
     Q_PROPERTY(QString lockMode READ lockMode WRITE setLockMode NOTIFY lockModeChanged)
     Q_PROPERTY(QString displayStatus READ displayStatus WRITE setDisplayStatus NOTIFY displayStatusChanged)
     Q_PROPERTY(QString style READ style WRITE setStyle NOTIFY styleChanged)
@@ -58,52 +64,66 @@ public:
     explicit QuickClock(QQuickItem* aParent = NULL);
     ~QuickClock();
 
-    bool invertColors() const { return iInvertColors; }
+    bool invertColors() const;
     void setInvertColors(bool aValue);
 
-    bool drawBackground() const { return iDrawBackground; }
+    bool drawBackground() const;
     void setDrawBackground(bool aValue);
 
-    bool running() const { return iRunning; }
+    bool running() const;
     void setRunning(bool aRunning);
 
-    QString lockMode() const { return iLockMode; }
+    int renderType() const;
+    void setRenderType(int aValue);
+
+    QString lockMode() const;
     void setLockMode(QString aValue);
 
-    QString displayStatus() const { return iDisplayStatus; }
+    QString displayStatus() const;
     void setDisplayStatus(QString aValue);
 
-    QString style() const { return iRenderer->id(); }
+    QString style() const;
     void setStyle(QString aValue);
+
+    void scheduleUpdate();
+    ClockRenderer* renderer() const;
+    ClockTheme* theme() const;
 
     static QTime currentTime();
 
-signals:
+Q_SIGNALS:
     void invertColorsChanged();
     void drawBackgroundChanged();
     void displayStatusChanged();
+    void renderTypeChanged();
     void lockModeChanged();
     void styleChanged();
     void runningChanged();
+
+private Q_SLOTS:
+    void onRepaintTimer();
+    void onWidthChanged();
+    void onHeightChanged();
 
 protected:
     QSGNode* updatePaintNode(QSGNode* aNode, UpdatePaintNodeData* aData);
 
 private:
-    ClockTheme* theme() const;
+    void updateRenderingType();
+    void invalidatePixmaps();
     bool updatesEnabled() const;
-    void scheduleUpdate();
+    void requestUpdate(bool aFullUpdate);
     void paintOffScreenNoSec(QPainter* aPainter, const QSize& aSize,
          const QTime& aTime);
     void repaintHourMin(const QSize& aSize, const QTime& aTime);
-    Node* createSecNode(const QSize& aSize, const QTime& aTime);
-
-private slots:
-    void onRepaintTimer();
+    Node* paintSecNode(const QSize& aSize, const QTime& aTime);
 
 private:
+    CLOCK_PERFORMANCE_LOG_DEFINE
+    ClockSettings::RenderType iRenderType;
     bool iInvertColors;
     bool iDrawBackground;
+    bool iOptimized;
     bool iDisplayOff;
     bool iDisplayLocked;
     bool iRunning;
@@ -114,18 +134,32 @@ private:
     ClockTheme* iThemeInverted;
     QList<ClockRenderer*> iRenderers;
     ClockRenderer* iRenderer;
+    QuickClockSeconds* iSecLayer;
     QPixmap* iDialPlatePixmap;
     QPixmap* iHourMinPixmap;
     QTime iPaintTimeNoSec;
     QTimer* iRepaintTimer;
-
-#define CLOCK_PERFORMANCE_LOG 0
-#if CLOCK_PERFORMANCE_LOG
-    QDateTime iStartTime;
-    int iRenderCount;
-#endif // CLOCK_PERFORMANCE_LOG
+    int iPaintHour;
+    int iPaintMinute;
 };
 
 QML_DECLARE_TYPE(QuickClock)
+
+inline bool QuickClock::invertColors() const
+    { return iInvertColors; }
+inline bool QuickClock::drawBackground() const
+    { return iDrawBackground; }
+inline bool QuickClock::running() const
+    { return iRunning; }
+inline int QuickClock::renderType() const
+    { return iRenderType; }
+inline QString QuickClock::lockMode() const
+    { return iLockMode; }
+inline QString QuickClock::displayStatus() const
+    { return iDisplayStatus; }
+inline QString QuickClock::style() const
+    { return iRenderer->id(); }
+inline ClockRenderer* QuickClock::renderer() const
+    { return iRenderer; }
 
 #endif // QUICK_CLOCK_H

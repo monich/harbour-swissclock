@@ -31,59 +31,35 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef CLOCK_DEBUG_H
-#define CLOCK_DEBUG_H
+#ifndef QUICK_CLOCK_SECONDS_H
+#define QUICK_CLOCK_SECONDS_H
 
-#ifndef CLOCK_DEBUG
-#  define CLOCK_DEBUG 0
-#endif // CLOCK_DEBUG
+#include "QuickClock.h"
+#include "ClockDebug.h"
 
-#if CLOCK_DEBUG
-#  include <QDebug>
-#  define QDEBUG(x) qDebug() << x
-#  define QASSERT(x) ((x) ? ((void)0) : qt_assert(#x,__FILE__,__LINE__))
-#  define QVERIFY(x) QASSERT(x)
-#  define CLOCK_PERFORMANCE_LOG_ENABLED
-#else
-#  define QDEBUG(expr) ((void)0)
-#  define QASSERT(expr) ((void)0)
-#  define QVERIFY(x) (x)
-#endif // CLOCK_DEBUG
+class QuickClockSeconds: public QQuickItem {
+    Q_OBJECT
 
-#define QTRACE(x) QDEBUG(((void*)this) << x)
-
-#ifdef CLOCK_PERFORMANCE_LOG_ENABLED
-#  include <QDateTime>
-class ClockPerformance {
 public:
-    ClockPerformance() { reset(); }
-    void reset() {
-        iRenderCount = 0;
-        iStartTime = QDateTime::currentDateTime();
-    }
-    void record(void* iOwner) {
-        iRenderCount++;
-        QDateTime now = QDateTime::currentDateTime();
-        const int ms = iStartTime.msecsTo(now);
-        if (ms >= 1000) {
-            if (iRenderCount > 0) {
-                QDEBUG(iOwner << iRenderCount*1000.0/ms << "frames per second");
-                iRenderCount = 0;
-            }
-            iStartTime = now;
-        }
-    }
-private:
-    int iRenderCount;
-    QDateTime iStartTime;
-};
-#  define CLOCK_PERFORMANCE_LOG_DEFINE  ClockPerformance iPerformanceLog;
-#  define CLOCK_PERFORMANCE_LOG_RESET   iPerformanceLog.reset()
-#  define CLOCK_PERFORMANCE_LOG_RECORD  iPerformanceLog.record(this)
-#else
-#  define CLOCK_PERFORMANCE_LOG_DEFINE
-#  define CLOCK_PERFORMANCE_LOG_RESET
-#  define CLOCK_PERFORMANCE_LOG_RECORD
-#endif // CLOCK_PERFORMANCE_LOG_ENABLED
+    explicit QuickClockSeconds(QuickClock* aParent);
+    void setDirty() { iDirty = true; }
 
-#endif // CLOCK_DEBUG_H
+private:
+    ClockRenderer* renderer() const { return iClock->renderer(); }
+    ClockTheme* theme() const { return iClock->theme(); }
+
+protected:
+    QSGNode* updatePaintNode(QSGNode* aNode, UpdatePaintNodeData* aData);
+
+private slots:
+    void onWidthChanged();
+    void onHeightChanged();
+    void onVisibleChanged();
+
+private:
+    CLOCK_PERFORMANCE_LOG_DEFINE
+    QuickClock* iClock;
+    bool iDirty;
+};
+
+#endif // QUICK_CLOCK_SECONDS_H

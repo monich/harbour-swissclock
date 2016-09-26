@@ -1,62 +1,94 @@
 /*
-  Copyright (C) 2014-2015 Jolla Ltd.
-  Contact: Slava Monich <slava.monich@jolla.com>
-
-  You may use this file under the terms of BSD license as follows:
-
-  Redistribution and use in source and binary forms, with or without
-  modification, are permitted provided that the following conditions
-  are met:
-
-    * Redistributions of source code must retain the above copyright
-      notice, this list of conditions and the following disclaimer.
-    * Redistributions in binary form must reproduce the above copyright
-      notice, this list of conditions and the following disclaimer in the
-      documentation and/or other materials provided with the distribution.
-    * Neither the name of the Jolla Ltd nor the
-      names of its contributors may be used to endorse or promote products
-      derived from this software without specific prior written permission.
-
-  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDERS OR CONTRIBUTORS
-  BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
-  THE POSSIBILITY OF SUCH DAMAGE.
-*/
+ * Copyright (C) 2014-2016 Jolla Ltd.
+ * Contact: Slava Monich <slava.monich@jolla.com>
+ *
+ * You may use this file under the terms of the BSD license as follows:
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *   - Redistributions of source code must retain the above copyright
+ *     notice, this list of conditions and the following disclaimer.
+ *   - Redistributions in binary form must reproduce the above copyright
+ *     notice, this list of conditions and the following disclaimer in
+ *     the documentation and/or other materials provided with the
+ *     distribution.
+ *   - Neither the name of Jolla Ltd nor the names of its contributors
+ *     may be used to endorse or promote products derived from this
+ *     software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
 
 #include "ClockRenderer.h"
+#include "ClockDebug.h"
+
+#include <QPainterPath>
 
 const QString ClockRenderer::HELSINKI_METRO("HelsinkiMetro");
 
 class HelsinkiMetro : public ClockRenderer
 {
 public:
+    HelsinkiMetro();
+    virtual ~HelsinkiMetro();
     virtual void paintDialPlate(QPainter* aPainter, const QSize& aSize,
         ClockTheme* aTheme, bool aDrawBackground);
     virtual void paintHourMinHands(QPainter* aPainter, const QSize& aSize,
         const QTime& aTime, ClockTheme* aTheme);
     virtual void paintSecHand(QPainter* aPainter, const QSize& aSize,
         const QTime& aTime, ClockTheme* aTheme);
+    virtual void initSecNode(QSGTransformNode* aTxNode, const QSizeF& aSize,
+        QQuickWindow* aWindow, ClockTheme* aTheme);
+
+    bool dropCachedItems(const QSizeF& aSize, ClockTheme* aTheme);
     static void paintHand(QPainter* aPainter, const QRectF& aRect,
         qreal aAngle, const QBrush& aBrush,
         qreal aX = 0.0, qreal aY = 0.0);
 
-    HelsinkiMetro() : ClockRenderer(HELSINKI_METRO),
-        iSecondHandColor(255,0,0) {}
-private:
     QColor iSecondHandColor;
+    QBrush iSecondHandBrush;
+    QBrush iBlack;
+    QBrush iWhite;
+    QPolygonF iPolygon;
+    QSizeF iSize;
+    QQuickWindow* iWindow;
+    ClockTheme* iTheme;
+    QPixmap* iCenterDiskPixmap;
 };
 
 ClockRenderer*
 ClockRenderer::newHelsinkiMetro()
 {
     return new HelsinkiMetro;
+}
+
+HelsinkiMetro::HelsinkiMetro() :
+    ClockRenderer(HELSINKI_METRO),
+    iSecondHandColor(255, 0, 0),
+    iSecondHandBrush(iSecondHandColor, Qt::SolidPattern),
+    iBlack(Qt::black),
+    iWhite(Qt::white),
+    iWindow(NULL),
+    iTheme(NULL),
+    iCenterDiskPixmap(NULL)
+{
+}
+
+HelsinkiMetro::~HelsinkiMetro()
+{
+    if (iCenterDiskPixmap) delete iCenterDiskPixmap;
 }
 
 void
@@ -186,34 +218,114 @@ HelsinkiMetro::paintSecHand(
     const qreal w = aSize.width();
     const qreal h = aSize.height();
     const qreal d = qMin(w, h);
+    const int r = qMax((int)(d / 23), 3);
 
-    const qreal y = qMax(qreal(1), qreal(d / 195));
-    const qreal r = qMax(qreal(3), qreal(d / 23));
-    const qreal x1 = -(d / 6.97);
-    const qreal x2 = d / 2;
+    dropCachedItems(aSize, aTheme);
 
-    QPainterPath path;
-    path.moveTo(x1, 0);
-    path.lineTo(x1+y, -y);
-    path.lineTo(x2-y, -y);
-    path.lineTo(x2, 0);
-    path.lineTo(x2-y, y);
-    path.lineTo(x1+y, y);
-    path.closeSubpath();
+    if (iPolygon.isEmpty()) {
+        const qreal y = qMax(qreal(1), qreal(d / 195));
+        const qreal x1 = -(d / 6.97);
+        const qreal x2 = d / 2;
 
-    QBrush secBrush(iSecondHandColor);
-    QPointF center(0,0);
+        QTRACE("- new path");
+        iSize = aSize;
+        QPointF origin(x1, 0);
+        iPolygon.clear();
+        iPolygon.append(origin);
+        iPolygon.append(QPointF(x1+y, -y));
+        iPolygon.append(QPointF(x2-y, -y));
+        iPolygon.append(QPointF(x2, 0));
+        iPolygon.append(QPointF(x2-y, y));
+        iPolygon.append(QPointF(x1+y, y));
+        iPolygon.append(origin);
+    }
+
+    if (!iCenterDiskPixmap) {
+        QPointF center(0,0);
+        if (iCenterDiskPixmap) delete iCenterDiskPixmap;
+        iCenterDiskPixmap = new QPixmap(2*(r+1), 2*(r+1));
+        QPainter diskPainter(iCenterDiskPixmap);
+        diskPainter.setPen(Qt::NoPen);
+        diskPainter.setBrush(iSecondHandColor);
+        diskPainter.setRenderHint(QPainter::Antialiasing);
+        diskPainter.setRenderHint(QPainter::HighQualityAntialiasing);
+        diskPainter.setCompositionMode(QPainter::CompositionMode_Source);
+        diskPainter.fillRect(QRectF(0, 0, 2*(r+1), 2*(r+1)), Qt::transparent);
+        diskPainter.translate(r+1, r+1);
+        diskPainter.drawEllipse(center, r, r);
+        diskPainter.setBrush(QBrush(Qt::white));
+        diskPainter.drawEllipse(center, 2, 2);
+        diskPainter.setBrush(QBrush(Qt::black));
+        diskPainter.drawEllipse(center, 1, 1);
+    }
 
     aPainter->save();
     aPainter->setPen(Qt::NoPen);
-    aPainter->setBrush(secBrush);
+    aPainter->setBrush(iSecondHandBrush);
     aPainter->translate(w/2, h/2);
+    aPainter->save();
     aPainter->rotate(6.0 * (aTime.second() + aTime.msec()/1000.0) - 90);
-    aPainter->drawPath(path);
-    aPainter->drawEllipse(center, r, r);
-    aPainter->setBrush(QBrush(Qt::white));
-    aPainter->drawEllipse(center, 2, 2);
-    aPainter->setBrush(QBrush(Qt::black));
-    aPainter->drawEllipse(center, 1, 1);
+    aPainter->drawPolygon(iPolygon);
     aPainter->restore();
+    aPainter->drawPixmap(-(r+1), -(r+1), *iCenterDiskPixmap);
+    aPainter->restore();
+}
+
+bool
+HelsinkiMetro::dropCachedItems(
+    const QSizeF& aSize,
+    ClockTheme* aTheme)
+{
+    bool sizeChanged;
+    if (iSize != aSize) {
+        iSize = aSize;
+        sizeChanged = true;
+    } else {
+        sizeChanged = false;
+    }
+
+    bool themeChanged;
+    if (iTheme != aTheme) {
+        iTheme = aTheme;
+        themeChanged = true;
+    } else {
+        themeChanged = false;
+    }
+
+    return (sizeChanged || themeChanged);
+}
+
+void
+HelsinkiMetro::initSecNode(
+    QSGTransformNode* aTxNode,
+    const QSizeF& aSize,
+    QQuickWindow* aWindow,
+    ClockTheme* aTheme)
+{
+    const qreal w = aSize.width();
+    const qreal h = aSize.height();
+    const qreal d = qMin(w, h);
+    const qreal x0 = w/2;
+    const qreal y0 = h/2;
+    const qreal r = qMax((int)(d / 23), 3);
+    const qreal y = qMax(qreal(1), qreal(d / 195));
+    const qreal x1 = x0 - (d/6.97);
+    const qreal x2 = x0 + d/2;
+
+    QDEBUG("initializing" << qPrintable(id()) << "node");
+    QSGGeometry* g = new QSGGeometry(QSGGeometry::defaultAttributes_Point2D(),6);
+    QSGGeometry::Point2D* v = g->vertexDataAsPoint2D();
+    g->setDrawingMode(GL_TRIANGLE_FAN);
+    v[0].x = x1;   v[0].y = y0;
+    v[1].x = x1+y; v[1].y = y0-y;
+    v[2].x = x2-y; v[2].y = y0-y;
+    v[3].x = x2;   v[3].y = y0;
+    v[4].x = x2-y; v[4].y = y0+y;
+    v[5].x = x1+y; v[5].y = y0+y;
+    aTxNode->appendChildNode(geometryNode(g, iSecondHandColor));
+
+    QPointF center(x0,y0);
+    QSGNode* rootNode = aTxNode->parent();
+    rootNode->appendChildNode(circleNode(center, r, iSecondHandColor));
+    rootNode->appendChildNode(new CenterNode(aWindow, center));
 }

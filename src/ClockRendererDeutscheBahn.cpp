@@ -1,36 +1,38 @@
 /*
-  Copyright (C) 2014-2015 Jolla Ltd.
-  Contact: Slava Monich <slava.monich@jolla.com>
-
-  You may use this file under the terms of BSD license as follows:
-
-  Redistribution and use in source and binary forms, with or without
-  modification, are permitted provided that the following conditions
-  are met:
-
-    * Redistributions of source code must retain the above copyright
-      notice, this list of conditions and the following disclaimer.
-    * Redistributions in binary form must reproduce the above copyright
-      notice, this list of conditions and the following disclaimer in the
-      documentation and/or other materials provided with the distribution.
-    * Neither the name of the Jolla Ltd nor the
-      names of its contributors may be used to endorse or promote products
-      derived from this software without specific prior written permission.
-
-  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDERS OR CONTRIBUTORS
-  BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
-  THE POSSIBILITY OF SUCH DAMAGE.
-*/
+ * Copyright (C) 2014-2016 Jolla Ltd.
+ * Contact: Slava Monich <slava.monich@jolla.com>
+ *
+ * You may use this file under the terms of the BSD license as follows:
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *   - Redistributions of source code must retain the above copyright
+ *     notice, this list of conditions and the following disclaimer.
+ *   - Redistributions in binary form must reproduce the above copyright
+ *     notice, this list of conditions and the following disclaimer in
+ *     the documentation and/or other materials provided with the
+ *     distribution.
+ *   - Neither the name of Jolla Ltd nor the names of its contributors
+ *     may be used to endorse or promote products derived from this
+ *     software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
 
 #include "ClockRenderer.h"
+#include "ClockDebug.h"
 
 const QString ClockRenderer::DEUTSCHE_BAHN("DeutscheBahn");
 
@@ -43,13 +45,15 @@ public:
         const QTime& aTime, ClockTheme* aTheme);
     virtual void paintSecHand(QPainter* aPainter, const QSize& aSize,
         const QTime& aTime, ClockTheme* aTheme);
+    virtual void initSecNode(QSGTransformNode* aTxNode, const QSizeF& aSize,
+        QQuickWindow* aWindow, ClockTheme* aTheme);
+
     static void paintHand(QPainter* aPainter, const QRectF& aRect,
-        qreal aAngle, const QBrush& aBrush,
-        qreal aX = 0.0, qreal aY = 0.0);
+        qreal aAngle, const QBrush& aBrush, qreal aX = 0.0, qreal aY = 0.0);
 
     DeutscheBahn() : ClockRenderer(DEUTSCHE_BAHN),
         iSecondHandColor(255,32,32) {}
-private:
+
     QColor iSecondHandColor;
 };
 
@@ -234,4 +238,57 @@ DeutscheBahn::paintSecHand(
     aPainter->drawEllipse(center, r, r);
 
     aPainter->restore();
+}
+
+void
+DeutscheBahn::initSecNode(
+    QSGTransformNode* aTxNode,
+    const QSizeF& aSize,
+    QQuickWindow* aWindow,
+    ClockTheme* aTheme)
+{
+    const qreal w = aSize.width();
+    const qreal h = aSize.height();
+    const qreal d = qMin(w, h);
+    const qreal x0 = w/2;
+    const qreal y0 = h/2;
+
+    QDEBUG("initializing" << qPrintable(id()) << "node");
+
+    // Draw the second hand
+    const qreal x1 = d * 0.23;
+    const qreal x2 = d * 0.28;
+    const qreal x3 = d * 0.33;
+    const qreal x4 = d * 0.486;
+    const qreal y1 = qMax(d * qreal(0.011), qreal(2));
+    const qreal y2 = qMax(d * qreal(0.009), qreal(1));
+    const qreal y3 = qMax(d * qreal(0.008), qreal(1));
+    const qreal y4 = qMax(d * qreal(0.0065), qreal(1));
+    const qreal r1 = qMax(d * qreal(0.052), qreal(2));
+    const qreal r2 = qMax(d * qreal(0.056), qreal(3));
+    const qreal dr = qMax(d * qreal(0.015), qreal(1));
+
+    QSGGeometry* g = new QSGGeometry(QSGGeometry::defaultAttributes_Point2D(),4);
+    QSGGeometry::Point2D* v = g->vertexDataAsPoint2D();
+    g->setDrawingMode(GL_TRIANGLE_FAN);
+    v[0].x = x0;     v[0].y = y0+y1;
+    v[1].x = x0+x1;  v[1].y = y0+y2;
+    v[2].x = v[1].x; v[2].y = y0-y2;
+    v[3].x = v[0].x; v[3].y = y0-y1;
+    aTxNode->appendChildNode(geometryNode(g, iSecondHandColor));
+
+    g = new QSGGeometry(QSGGeometry::defaultAttributes_Point2D(),4);
+    v = g->vertexDataAsPoint2D();
+    g->setDrawingMode(GL_TRIANGLE_FAN);
+    v[0].x = x0+x3;  v[0].y = y0+y3;
+    v[1].x = x0+x4;  v[1].y = y0+y4;
+    v[2].x = v[1].x; v[2].y = y0-y4;
+    v[3].x = v[0].x; v[3].y = y0-y3;
+    aTxNode->appendChildNode(geometryNode(g, iSecondHandColor));
+    aTxNode->appendChildNode(ringNode(QPointF(x0+x2,y0), r1, dr, iSecondHandColor));
+
+    QPointF center(x0,y0);
+    QSGNode* rootNode = aTxNode->parent();
+    rootNode->appendChildNode(circleNode(center, r2, aTheme->iHandShadowColor1));
+    rootNode->appendChildNode(circleNode(center, r1, aTheme->iHourMinHandColor));
 }
