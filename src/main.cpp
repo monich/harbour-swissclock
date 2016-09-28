@@ -33,8 +33,8 @@
 
 #include "QuickClock.h"
 #include "ClockSettings.h"
-#include "SystemState.h"
 #include "ClockDebug.h"
+#include "HarbourSystemState.h"
 
 #include <QtGui>
 #include <QtQuick>
@@ -44,7 +44,7 @@ void registerClockTypes(const char* uri, int v1 = 1, int v2 = 0)
 {
     qmlRegisterType<QuickClock>(uri, v1, v2, "Clock");
     qmlRegisterType<ClockSettings>(uri, v1, v2, "ClockSettings");
-    qmlRegisterType<SystemState>(uri, v1, v2, "SystemState");
+    qmlRegisterType<HarbourSystemState>(uri, v1, v2, "SystemState");
 }
 
 Q_DECL_EXPORT int main(int argc, char *argv[])
@@ -60,7 +60,7 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
         translator->load(transFile, transDir)) {
         app->installTranslator(translator);
     } else {
-        QDEBUG("Failed to load translator for" << locale);
+        HDEBUG("Failed to load translator for" << locale);
         delete translator;
     }
 

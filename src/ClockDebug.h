@@ -34,23 +34,13 @@
 #ifndef CLOCK_DEBUG_H
 #define CLOCK_DEBUG_H
 
-#ifndef CLOCK_DEBUG
-#  define CLOCK_DEBUG 0
-#endif // CLOCK_DEBUG
+#include "HarbourDebug.h"
 
-#if CLOCK_DEBUG
-#  include <QDebug>
-#  define QDEBUG(x) qDebug() << x
-#  define QASSERT(x) ((x) ? ((void)0) : qt_assert(#x,__FILE__,__LINE__))
-#  define QVERIFY(x) QASSERT(x)
+#if HARBOUR_DEBUG
 #  define CLOCK_PERFORMANCE_LOG_ENABLED
-#else
-#  define QDEBUG(expr) ((void)0)
-#  define QASSERT(expr) ((void)0)
-#  define QVERIFY(x) (x)
-#endif // CLOCK_DEBUG
+#endif // HARBOUR_DEBUG
 
-#define QTRACE(x) QDEBUG(((void*)this) << x)
+#define QTRACE(x) HDEBUG(((void*)this) << x)
 
 #ifdef CLOCK_PERFORMANCE_LOG_ENABLED
 #  include <QDateTime>
@@ -67,7 +57,7 @@ public:
         const int ms = iStartTime.msecsTo(now);
         if (ms >= 1000) {
             if (iRenderCount > 0) {
-                QDEBUG(iOwner << iRenderCount*1000.0/ms << "frames per second");
+                HDEBUG(iOwner << iRenderCount*1000.0/ms << "frames per second");
                 iRenderCount = 0;
             }
             iStartTime = now;

@@ -253,7 +253,7 @@ DeutscheBahn::initSecNode(
     const qreal x0 = w/2;
     const qreal y0 = h/2;
 
-    QDEBUG("initializing" << qPrintable(id()) << "node");
+    HDEBUG("initializing" << qPrintable(id()) << "node");
 
     // Draw the second hand
     const qreal x1 = d * 0.23;

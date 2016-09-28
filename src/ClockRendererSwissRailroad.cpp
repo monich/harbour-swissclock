@@ -235,7 +235,7 @@ SwissRailroad::initSecNode(
     const qreal xs1 = xh1 + d / 140;
     const qreal xs2 = x1 - d / 50 - rs2;
 
-    QDEBUG("initializing" << qPrintable(id()) << "node");
+    HDEBUG("initializing" << qPrintable(id()) << "node");
     QSGGeometry* g = new QSGGeometry(QSGGeometry::defaultAttributes_Point2D(), 4);
     QSGGeometry::Point2D* v = g->vertexDataAsPoint2D();
     g->setDrawingMode(GL_TRIANGLE_FAN);

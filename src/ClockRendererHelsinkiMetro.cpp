@@ -312,7 +312,7 @@ HelsinkiMetro::initSecNode(
     const qreal x1 = x0 - (d/6.97);
     const qreal x2 = x0 + d/2;
 
-    QDEBUG("initializing" << qPrintable(id()) << "node");
+    HDEBUG("initializing" << qPrintable(id()) << "node");
     QSGGeometry* g = new QSGGeometry(QSGGeometry::defaultAttributes_Point2D(),6);
     QSGGeometry::Point2D* v = g->vertexDataAsPoint2D();
     g->setDrawingMode(GL_TRIANGLE_FAN);

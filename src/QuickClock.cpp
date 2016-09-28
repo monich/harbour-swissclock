@@ -36,6 +36,8 @@
 #include "ClockSettings.h"
 #include "ClockDebug.h"
 
+#include "HarbourSystemState.h"
+
 #include <QQuickWindow>
 #include <QSGSimpleTextureNode>
 
@@ -126,7 +128,7 @@ QuickClock::~QuickClock()
 
 QTime QuickClock::currentTime()
 {
-#if CLOCK_DEBUG
+#if HARBOUR_DEBUG
     static const char FIXED_TIME_UNINITIALIZED[] = "";
     static const char* fixedTimeString = FIXED_TIME_UNINITIALIZED;
     static QTime fixedTime;
@@ -138,9 +140,9 @@ QTime QuickClock::currentTime()
                 fixedTime = QTime::fromString(fixedTimeString, "h:mm:s.z");
             }
             if (fixedTime.isValid()) {
-                qDebug() << "Fixed" << fixedTime;
+                HDEBUG("Fixed" << fixedTime);
             } else {
-                qWarning() << "Invalid time string " << fixedTimeString;
+                HWARN("Invalid time string " << fixedTimeString);
                 fixedTimeString = NULL;
             }
         }
@@ -218,7 +220,7 @@ void QuickClock::setDisplayStatus(QString aValue)
     if (iDisplayStatus != aValue) {
         iDisplayStatus = aValue;
         Q_EMIT displayStatusChanged();
-        iDisplayOff = (iDisplayStatus == "off");
+        iDisplayOff = (iDisplayStatus == HarbourSystemState::MCE_DISPLAY_OFF);
         iRepaintTimer->setInterval(iDisplayOff ?
             UPDATE_INTERVAL_WITH_DISPLAY_OFF :
             UPDATE_INTERVAL_WITH_DISPLAY_ON);
@@ -235,7 +237,7 @@ void QuickClock::setLockMode(QString aValue)
     if (iLockMode != aValue) {
         iLockMode = aValue;
         Q_EMIT lockModeChanged();
-        iDisplayLocked = (iLockMode == "locked");
+        iDisplayLocked = (iLockMode == HarbourSystemState::MCE_TK_LOCKED);
         if (updatesEnabled()) {
             QTRACE("- requesting update");
             requestUpdate(false);
@@ -355,7 +357,7 @@ void QuickClock::paintOffScreenNoSec(
         delete iDialPlatePixmap;
         iDialPlatePixmap = new QPixmap(aSize);
 
-        QDEBUG("drawing dial plate");
+        HDEBUG("drawing dial plate");
         QPainter painter(iDialPlatePixmap);
 
         QRectF rect(QPoint(0,0), aSize);

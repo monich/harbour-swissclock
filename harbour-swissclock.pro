@@ -7,7 +7,7 @@ QT += dbus
 
 CONFIG(debug, debug|release) {
   QMAKE_CXXFLAGS += -g -O0
-  DEFINES += CLOCK_DEBUG
+  DEFINES += HARBOUR_DEBUG
 }
 
 SOURCES += \
@@ -19,17 +19,24 @@ SOURCES += \
     src/ClockSettings.cpp \
     src/ClockTheme.cpp \
     src/QuickClock.cpp \
-    src/QuickClockSeconds.cpp \
-    src/SystemState.cpp
-
+    src/QuickClockSeconds.cpp
 HEADERS += \
     src/ClockDebug.h \
     src/ClockRenderer.h \
     src/ClockSettings.h \
     src/ClockTheme.h \
     src/QuickClock.h \
-    src/QuickClockSeconds.h \
-    src/SystemState.h
+    src/QuickClockSeconds.h
+
+HARBOUR_LIB = $${_PRO_FILE_PWD_}/harbour-lib
+HARBOUR_SRC = $${HARBOUR_LIB}/src
+HARBOUR_INCLUDE = $${HARBOUR_LIB}/include
+INCLUDEPATH += $${HARBOUR_INCLUDE}
+SOURCES += \
+  $${HARBOUR_SRC}/HarbourSystemState.cpp
+HEADERS += \
+    $${HARBOUR_INCLUDE}/HarbourDebug.h \
+    $${HARBOUR_INCLUDE}/HarbourSystemState.h
 
 OTHER_FILES += \
     qml/*.qml \
