@@ -43,9 +43,22 @@ Page {
     property bool ready: false
 
     readonly property var clockModel: [
-        { style: "SwissRailroad", title: qsTr("swiss-clock-title") },
-        { style: "HelsinkiMetro", title: qsTr("helsinki-clock-title") },
-        { style: "DeutscheBahn", title: qsTr("deutschebahn-clock-title") }
+        {
+            style: "SwissRailroad",
+            //: Label for Swiss raiload clock style
+            //% "Swiss railroad"
+            title: qsTrId("swiss-clock-title")
+        },{
+            style: "HelsinkiMetro",
+            //: Label for Helsinki metro clock style
+            //% "Helsinki metro"
+            title: qsTrId("helsinki-clock-title")
+        },{
+            style: "DeutscheBahn",
+            //: Label for Deutsche Bahn clock style
+            //% "Deutsche Bahn"
+            title: qsTrId("deutschebahn-clock-title")
+        }
     ]
 
     Component.onCompleted: {

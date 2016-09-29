@@ -2,17 +2,20 @@
 <!DOCTYPE TS>
 <TS version="2.1">
 <context>
-    <name>ClockPage</name>
-    <message>
-        <source>swiss-clock-title</source>
+    <name></name>
+    <message id="swiss-clock-title">
+        <source>Swiss railroad</source>
+        <extracomment>Label for Swiss raiload clock style</extracomment>
         <translation>Swiss railroad</translation>
     </message>
-    <message>
-        <source>helsinki-clock-title</source>
+    <message id="helsinki-clock-title">
+        <source>Helsinki metro</source>
+        <extracomment>Label for Helsinki metro clock style</extracomment>
         <translation>Helsinki metro</translation>
     </message>
-    <message>
-        <source>deutschebahn-clock-title</source>
+    <message id="deutschebahn-clock-title">
+        <source>Deutsche Bahn</source>
+        <extracomment>Label for Deutsche Bahn clock style</extracomment>
         <translation>Deutsche Bahn</translation>
     </message>
 </context>
