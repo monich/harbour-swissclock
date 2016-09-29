@@ -45,7 +45,7 @@ desktop-file-install --delete-original \
 %{_bindir}/%{name}
 %{_datadir}/%{name}
 %{_datadir}/applications/%{name}.desktop
-%{_datadir}/icons/hicolor/86x86/apps/%{name}.png
+%{_datadir}/icons/hicolor/*/apps/%{name}.png
 
 %changelog
 * Sun Oct 26 2014 Slava Monich <slava.monich@jolla.com> 1.0.2

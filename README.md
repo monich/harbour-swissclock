@@ -1,3 +1,3 @@
 Fancy clock for Sailfish OS.
 
-![icon](harbour-swissclock.png)
+![icon](icons/86x86/harbour-swissclock.png)

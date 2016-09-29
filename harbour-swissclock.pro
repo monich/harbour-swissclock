@@ -1,4 +1,6 @@
-TARGET = harbour-swissclock
+NAME = swissclock
+PREFIX = harbour
+TARGET = $${PREFIX}-$${NAME}
 CONFIG += sailfishapp
 CONFIG += link_pkgconfig
 PKGCONFIG += mlite5 sailfishapp
@@ -40,13 +42,27 @@ HEADERS += \
 
 OTHER_FILES += \
     qml/*.qml \
-    qml/*.png \
-    harbour-swissclock.desktop \
+    icons/harbour-$${NAME}.svg \
+    harbour-$${NAME}.desktop \
     translations/*.ts \
-    rpm/harbour-swissclock.changes \
-    rpm/harbour-swissclock.spec
+    rpm/harbour-$${NAME}.changes \
+    rpm/harbour-$${NAME}.spec
+
+# Icons
+ICON_SIZES = 86 108 128 256
+for(s, ICON_SIZES) {
+    icon_target = icon$${s}
+    icon_dir = icons/$${s}x$${s}
+    $${icon_target}.files = $${icon_dir}/$${TARGET}.png
+    $${icon_target}.path = /usr/share/icons/hicolor/$${s}x$${s}/apps
+    equals(PREFIX, "openrepos") {
+        $${icon_target}.extra = cp $${icon_dir}/harbour-$${NAME}.png $$eval($${icon_target}.files)
+        $${icon_target}.CONFIG += no_check_exist
+    }
+    INSTALLS += $${icon_target}
+}
 
 CONFIG += sailfishapp_i18n
 TRANSLATIONS += \
-    translations/harbour-swissclock.ts \
-    translations/harbour-swissclock-ru.ts
+    translations/harbour-$${NAME}.ts \
+    translations/harbour-$${NAME}-ru.ts
