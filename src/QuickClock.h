@@ -39,6 +39,8 @@
 #include "ClockTheme.h"
 #include "ClockDebug.h"
 
+#include "HarbourSystemState.h"
+
 #include <QQuickItem>
 #include <QDateTime>
 #include <QPainter>
@@ -56,8 +58,6 @@ class QuickClock: public QQuickItem
     Q_PROPERTY(bool invertColors READ invertColors WRITE setInvertColors NOTIFY invertColorsChanged)
     Q_PROPERTY(bool drawBackground READ drawBackground WRITE setDrawBackground NOTIFY drawBackgroundChanged)
     Q_PROPERTY(int renderType READ renderType WRITE setRenderType NOTIFY renderTypeChanged)
-    Q_PROPERTY(QString lockMode READ lockMode WRITE setLockMode NOTIFY lockModeChanged)
-    Q_PROPERTY(QString displayStatus READ displayStatus WRITE setDisplayStatus NOTIFY displayStatusChanged)
     Q_PROPERTY(QString style READ style WRITE setStyle NOTIFY styleChanged)
 
 public:
@@ -76,12 +76,6 @@ public:
     int renderType() const;
     void setRenderType(int aValue);
 
-    QString lockMode() const;
-    void setLockMode(QString aValue);
-
-    QString displayStatus() const;
-    void setDisplayStatus(QString aValue);
-
     QString style() const;
     void setStyle(QString aValue);
 
@@ -94,9 +88,7 @@ public:
 Q_SIGNALS:
     void invertColorsChanged();
     void drawBackgroundChanged();
-    void displayStatusChanged();
     void renderTypeChanged();
-    void lockModeChanged();
     void styleChanged();
     void runningChanged();
 
@@ -104,11 +96,15 @@ private Q_SLOTS:
     void onRepaintTimer();
     void onWidthChanged();
     void onHeightChanged();
+    void onLockModeChanged();
+    void onDisplayStatusChanged();
 
 protected:
     QSGNode* updatePaintNode(QSGNode* aNode, UpdatePaintNodeData* aData);
 
 private:
+    bool displayOff() const;
+    bool displayLocked() const;
     void updateRenderingType();
     void invalidatePixmaps();
     bool updatesEnabled() const;
@@ -120,16 +116,13 @@ private:
 
 private:
     CLOCK_PERFORMANCE_LOG_DEFINE
+    QSharedPointer<HarbourSystemState> iSystemState;
     ClockSettings::RenderType iRenderType;
     bool iInvertColors;
     bool iDrawBackground;
     bool iOptimized;
-    bool iDisplayOff;
-    bool iDisplayLocked;
     bool iRunning;
     bool iRepaintAll;
-    QString iLockMode;
-    QString iDisplayStatus;
     ClockTheme* iThemeDefault;
     ClockTheme* iThemeInverted;
     QList<ClockRenderer*> iRenderers;
@@ -153,13 +146,13 @@ inline bool QuickClock::running() const
     { return iRunning; }
 inline int QuickClock::renderType() const
     { return iRenderType; }
-inline QString QuickClock::lockMode() const
-    { return iLockMode; }
-inline QString QuickClock::displayStatus() const
-    { return iDisplayStatus; }
 inline QString QuickClock::style() const
     { return iRenderer->id(); }
 inline ClockRenderer* QuickClock::renderer() const
     { return iRenderer; }
+inline bool QuickClock::displayOff() const
+    { return iSystemState->displayStatus() == HarbourSystemState::MCE_DISPLAY_OFF; }
+inline bool QuickClock::displayLocked() const
+    { return iSystemState->lockMode() == HarbourSystemState::MCE_TK_LOCKED; }
 
 #endif // QUICK_CLOCK_H

@@ -36,8 +36,6 @@
 #include "ClockSettings.h"
 #include "ClockDebug.h"
 
-#include "HarbourSystemState.h"
-
 #include <QQuickWindow>
 #include <QSGSimpleTextureNode>
 
@@ -80,12 +78,11 @@ QuickClock::Node::~Node()
 
 QuickClock::QuickClock(QQuickItem* aParent) :
     QQuickItem(aParent),
+    iSystemState(HarbourSystemState::sharedInstance()),
     iRenderType(DEFAULT_RENDER_TYPE),
     iInvertColors(DEFAULT_INVERT_COLORS),
     iDrawBackground(true),
     iOptimized(false),
-    iDisplayOff(false),
-    iDisplayLocked(false),
     iRunning(true),
     iRepaintAll(true),
     iThemeDefault(ClockTheme::newDefault()),
@@ -110,8 +107,13 @@ QuickClock::QuickClock(QQuickItem* aParent) :
     iRepaintTimer->setInterval(UPDATE_INTERVAL_WITH_DISPLAY_ON);
     connect(iRepaintTimer, SIGNAL(timeout()), SLOT(onRepaintTimer()));
 
+    HarbourSystemState* s = iSystemState.data();
+    connect(s, SIGNAL(lockModeChanged()), SLOT(onLockModeChanged()));
+    connect(s, SIGNAL(displayStatusChanged()), SLOT(onDisplayStatusChanged()));
     connect(this, SIGNAL(widthChanged()), SLOT(onWidthChanged()));
     connect(this, SIGNAL(heightChanged()), SLOT(onHeightChanged()));
+    onDisplayStatusChanged();
+    onLockModeChanged();
     updateRenderingType();
     setRunning(true);
 }
@@ -211,37 +213,29 @@ void QuickClock::setStyle(QString aValue)
 
 bool QuickClock::updatesEnabled() const
 {
-    return (iRunning && (!iDisplayOff || !iDisplayLocked));
+    return iRunning && (!displayOff() || !displayLocked());
 }
 
-void QuickClock::setDisplayStatus(QString aValue)
+void QuickClock::onDisplayStatusChanged()
 {
-    QTRACE("-" << aValue);
-    if (iDisplayStatus != aValue) {
-        iDisplayStatus = aValue;
-        Q_EMIT displayStatusChanged();
-        iDisplayOff = (iDisplayStatus == HarbourSystemState::MCE_DISPLAY_OFF);
-        iRepaintTimer->setInterval(iDisplayOff ?
-            UPDATE_INTERVAL_WITH_DISPLAY_OFF :
-            UPDATE_INTERVAL_WITH_DISPLAY_ON);
-        if (updatesEnabled()) {
-            QTRACE("- requesting update");
-            requestUpdate(false);
-        }
+    QString displayStatus = iSystemState->displayStatus();
+    QTRACE("-" << displayStatus);
+    iRepaintTimer->setInterval(displayOff() ?
+        UPDATE_INTERVAL_WITH_DISPLAY_OFF :
+        UPDATE_INTERVAL_WITH_DISPLAY_ON);
+    if (updatesEnabled()) {
+        QTRACE("- requesting update");
+        requestUpdate(false);
     }
 }
 
-void QuickClock::setLockMode(QString aValue)
+void QuickClock::onLockModeChanged()
 {
-    QTRACE("-" << aValue);
-    if (iLockMode != aValue) {
-        iLockMode = aValue;
-        Q_EMIT lockModeChanged();
-        iDisplayLocked = (iLockMode == HarbourSystemState::MCE_TK_LOCKED);
-        if (updatesEnabled()) {
-            QTRACE("- requesting update");
-            requestUpdate(false);
-        }
+    QString lockMode = iSystemState->lockMode();
+    QTRACE("-" << lockMode);
+    if (updatesEnabled()) {
+        QTRACE("- requesting update");
+        requestUpdate(false);
     }
 }
 

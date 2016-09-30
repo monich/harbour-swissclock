@@ -44,8 +44,6 @@ CoverBackground {
         invertColors: true
         style: globalClockSettings.clockStyle
         renderType: globalClockSettings.renderType
-        displayStatus: globalSystemState.displayStatus
-        lockMode: globalSystemState.lockMode
         anchors.centerIn: parent
         width: Math.ceil(parent.width - 2*Theme.paddingMedium*parent.width/Theme.coverSizeLarge.width)
         height: width

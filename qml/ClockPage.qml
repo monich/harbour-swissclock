@@ -132,8 +132,6 @@ Page {
                                 style: clockModel[(index + initialIndex) % clockModel.length].style
                                 invertColors: globalClockSettings.invertColors
                                 renderType: globalClockSettings.renderType
-                                displayStatus: globalSystemState.displayStatus
-                                lockMode: globalSystemState.lockMode
                                 running: (index == slideshow.currentIndex) || slideshow.moving
                             }
                             MouseArea {

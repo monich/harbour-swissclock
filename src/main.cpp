@@ -34,7 +34,6 @@
 #include "QuickClock.h"
 #include "ClockSettings.h"
 #include "ClockDebug.h"
-#include "HarbourSystemState.h"
 
 #include <QtGui>
 #include <QtQuick>
@@ -44,7 +43,6 @@ void registerClockTypes(const char* uri, int v1 = 1, int v2 = 0)
 {
     qmlRegisterType<QuickClock>(uri, v1, v2, "Clock");
     qmlRegisterType<ClockSettings>(uri, v1, v2, "ClockSettings");
-    qmlRegisterType<HarbourSystemState>(uri, v1, v2, "SystemState");
 }
 
 Q_DECL_EXPORT int main(int argc, char *argv[])
