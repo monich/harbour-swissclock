@@ -34,6 +34,8 @@
 #include "ClockRenderer.h"
 #include "ClockDebug.h"
 
+#include <math.h>
+
 const QString ClockRenderer::DEUTSCHE_BAHN("DeutscheBahn");
 
 class DeutscheBahn : public ClockRenderer
@@ -45,9 +47,15 @@ public:
         const QTime& aTime, ClockTheme* aTheme);
     virtual void paintSecHand(QPainter* aPainter, const QSize& aSize,
         const QTime& aTime, ClockTheme* aTheme);
-    virtual void initSecNode(QSGTransformNode* aTxNode, const QSizeF& aSize,
-        QQuickWindow* aWindow, ClockTheme* aTheme);
+    virtual void initNode(QSGTransformNode* aTxNode, NodeType aType,
+        QQuickWindow* aWindow, const QSizeF& aSize, ClockTheme* aTheme);
 
+    void initHour(QSGTransformNode* aTxNode, const QSizeF& aSize,
+        ClockTheme* aTheme);
+    void initMin(QSGTransformNode* aTxNode, const QSizeF& aSize,
+        ClockTheme* aTheme);
+    void initSec(QSGTransformNode* aTxNode, const QSizeF& aSize,
+        ClockTheme* aTheme);
     static void paintHand(QPainter* aPainter, const QRectF& aRect,
         qreal aAngle, const QBrush& aBrush, qreal aX = 0.0, qreal aY = 0.0);
 
@@ -229,17 +237,52 @@ DeutscheBahn::paintSecHand(
 }
 
 void
-DeutscheBahn::initSecNode(
+DeutscheBahn::initHour(
     QSGTransformNode* aTxNode,
     const QSizeF& aSize,
-    QQuickWindow* aWindow,
     ClockTheme* aTheme)
 {
     const qreal w = aSize.width();
     const qreal h = aSize.height();
     const qreal d = qMin(w, h);
-    const qreal x0 = w/2;
-    const qreal y0 = h/2;
+    const qreal yh = round(qMax(d * qreal(0.024), qreal(2)));
+    const qreal xh = round(d * 0.3);
+    QRectF rect(round(w/2), round(h/2)-yh, xh, 2*yh);
+    aTxNode->appendChildNode(rectNode(rect, aTheme->iHourMinHandColor));
+}
+
+void
+DeutscheBahn::initMin(
+    QSGTransformNode* aTxNode,
+    const QSizeF& aSize,
+    ClockTheme* aTheme)
+{
+    const qreal w = aSize.width();
+    const qreal h = aSize.height();
+    const qreal d = qMin(w, h);
+    const qreal ym = round(qMax(d * qreal(0.018), qreal(1)));
+    const qreal xm = round(d * 0.466);
+    const qreal x1 = round(w/2);
+    const qreal y1 = round(h/2)-ym;
+    aTxNode->appendChildNode(rectNode(QRectF(x1, y1-2, xm+2, 2*ym+4),
+        aTheme->iHandShadowColor2));
+    aTxNode->appendChildNode(rectNode(QRectF(x1, y1-1, xm+1, 2*ym+2),
+        aTheme->iHandShadowColor1));
+    aTxNode->appendChildNode(rectNode(QRectF(x1, y1, xm, 2*ym),
+        aTheme->iHourMinHandColor));
+}
+
+void
+DeutscheBahn::initSec(
+    QSGTransformNode* aTxNode,
+    const QSizeF& aSize,
+    ClockTheme* aTheme)
+{
+    const qreal w = aSize.width();
+    const qreal h = aSize.height();
+    const qreal d = qMin(w, h);
+    const qreal x0 = round(w/2);
+    const qreal y0 = round(h/2);
 
     HDEBUG("initializing" << qPrintable(id()) << "node");
 
@@ -253,7 +296,6 @@ DeutscheBahn::initSecNode(
     const qreal y3 = qMax(d * qreal(0.008), qreal(1));
     const qreal y4 = qMax(d * qreal(0.0065), qreal(1));
     const qreal r1 = qMax(d * qreal(0.052), qreal(2));
-    const qreal r2 = qMax(d * qreal(0.056), qreal(3));
     const qreal dr = qMax(d * qreal(0.015), qreal(1));
 
     QSGGeometry* g = new QSGGeometry(QSGGeometry::defaultAttributes_Point2D(),4);
@@ -277,6 +319,31 @@ DeutscheBahn::initSecNode(
 
     QPointF center(x0,y0);
     QSGNode* rootNode = aTxNode->parent();
-    rootNode->insertChildNodeBefore(circleNode(center, r2, aTheme->iHandShadowColor1), aTxNode);
-    rootNode->insertChildNodeAfter(circleNode(center, r1, aTheme->iHourMinHandColor), aTxNode);
+    rootNode->appendChildNode(circleNode(center, r1+2, aTheme->iHandShadowColor2));
+    rootNode->appendChildNode(circleNode(center, r1+1, aTheme->iHandShadowColor1));
+    rootNode->appendChildNode(circleNode(center, r1, aTheme->iHourMinHandColor));
+}
+
+void
+DeutscheBahn::initNode(
+    QSGTransformNode* aTxNode,
+    NodeType aType,
+    QQuickWindow* aWindow,
+    const QSizeF& aSize,
+    ClockTheme* aTheme)
+{
+    switch (aType) {
+    case NodeHour:
+        initHour(aTxNode, aSize, aTheme);
+        break;
+    case NodeMin:
+        initMin(aTxNode, aSize, aTheme);
+        break;
+    case NodeSec:
+        initSec(aTxNode, aSize, aTheme);
+        break;
+    default:
+        HWARN("Unsupported node type" << aType);
+        break;
+    }
 }

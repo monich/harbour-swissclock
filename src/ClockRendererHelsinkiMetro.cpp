@@ -50,9 +50,16 @@ public:
         const QTime& aTime, ClockTheme* aTheme);
     virtual void paintSecHand(QPainter* aPainter, const QSize& aSize,
         const QTime& aTime, ClockTheme* aTheme);
-    virtual void initSecNode(QSGTransformNode* aTxNode, const QSizeF& aSize,
-        QQuickWindow* aWindow, ClockTheme* aTheme);
+    virtual void initNode(QSGTransformNode* aTxNode, NodeType aType,
+        QQuickWindow* aWindow, const QSizeF& aSize, ClockTheme* aTheme);
 
+    void initHour(QSGTransformNode* aTxNode, const QSizeF& aSize,
+        ClockTheme* aTheme);
+    void initMin(QSGTransformNode* aTxNode, const QSizeF& aSize,
+        ClockTheme* aTheme);
+    void initSec(QSGTransformNode* aTxNode, QQuickWindow* aWindow,
+        const QSizeF& aSize);
+    static QSGNode* handNode(const QRectF& aRect, const QColor& aColor);
     static void paintHand(QPainter* aPainter, const QRectF& aRect,
         qreal aAngle, const QBrush& aBrush,
         qreal aX = 0.0, qreal aY = 0.0);
@@ -254,10 +261,13 @@ HelsinkiMetro::paintSecHand(
         diskPainter.fillRect(QRectF(0, 0, 2*(r+1), 2*(r+1)), Qt::transparent);
         diskPainter.translate(r+1, r+1);
         diskPainter.drawEllipse(center, r, r);
+
+        const int rw = qMax((int)d/200, 2);
+        const int rb = qMax((rw/2) & ~1, 1);
         diskPainter.setBrush(QBrush(Qt::white));
-        diskPainter.drawEllipse(center, 2, 2);
+        diskPainter.drawEllipse(center, rw, rw);
         diskPainter.setBrush(QBrush(Qt::black));
-        diskPainter.drawEllipse(center, 1, 1);
+        diskPainter.drawEllipse(center, rb, rb);
     }
 
     aPainter->save();
@@ -272,12 +282,70 @@ HelsinkiMetro::paintSecHand(
     aPainter->restore();
 }
 
+QSGNode*
+HelsinkiMetro::handNode(
+    const QRectF& aRect,
+    const QColor& aColor)
+{
+    const qreal x = aRect.right() - aRect.height() / 3.0;
+    QSGGeometry* g = new QSGGeometry(QSGGeometry::defaultAttributes_Point2D(), 5);
+    QSGGeometry::Point2D* v = g->vertexDataAsPoint2D();
+    g->setDrawingMode(GL_TRIANGLE_FAN);
+    v[0].x = aRect.right(); v[0].y = aRect.top() + aRect.height()/2;
+    v[1].x = x;             v[1].y = aRect.top();
+    v[2].x = aRect.left();  v[2].y = v[1].y;
+    v[3].x = v[2].x;        v[3].y = aRect.bottom();
+    v[4].x = x;             v[4].y = v[3].y;
+    return geometryNode(g, aColor);
+}
+
 void
-HelsinkiMetro::initSecNode(
+HelsinkiMetro::initHour(
     QSGTransformNode* aTxNode,
     const QSizeF& aSize,
-    QQuickWindow* aWindow,
     ClockTheme* aTheme)
+{
+    const qreal w = aSize.width();
+    const qreal h = aSize.height();
+    const qreal d = qMin(w, h);
+    const qreal yh = d / 31;
+    const qreal xh1 = -(d / 8.6);
+    const qreal xh2 = d / 3.4;
+    QRectF hourHandRect(round(h/2)+xh1, round(h/2)-yh, (xh2-xh1), 2*yh);
+    aTxNode->appendChildNode(handNode(hourHandRect, aTheme->iHourMinHandColor));
+}
+
+void
+HelsinkiMetro::initMin(
+    QSGTransformNode* aTxNode,
+    const QSizeF& aSize,
+    ClockTheme* aTheme)
+{
+    const qreal w = aSize.width();
+    const qreal h = aSize.height();
+    const qreal d = qMin(w, h);
+    const qreal x = d / 2 - qMax(qreal(1), qreal(d / 98));
+    const qreal y1 = d / 50;
+    const qreal x1 = -(d / 8.6);
+    const qreal x2 = qMin(qreal(d / 2.03), x - 3);
+    const qreal dx = (x2-x1);
+    const qreal dy = 2*y1;
+    const qreal x0 = round(w/2)+x1;
+    const qreal y0 = round(h/2)-y1;
+
+    aTxNode->appendChildNode(handNode(QRectF(x0-2, y0-2, dx+4, dy+4),
+        aTheme->iHandShadowColor2));
+    aTxNode->appendChildNode(handNode(QRectF(x0-1, y0-1, dx+2, dy+2),
+        aTheme->iHandShadowColor1));
+    aTxNode->appendChildNode(handNode(QRectF(x0, y0, dx, dy),
+        aTheme->iHourMinHandColor));
+}
+
+void
+HelsinkiMetro::initSec(
+    QSGTransformNode* aTxNode,
+    QQuickWindow* aWindow,
+    const QSizeF& aSize)
 {
     const qreal w = aSize.width();
     const qreal h = aSize.height();
@@ -303,4 +371,28 @@ HelsinkiMetro::initSecNode(
     aTxNode->appendChildNode(geometryNode(g, iSecondHandColor));
     aTxNode->parent()->appendChildNode(centerDiskNode(aWindow,
         QPointF(x0,y0), r, rc, iSecondHandColor));
+}
+
+void
+HelsinkiMetro::initNode(
+    QSGTransformNode* aTxNode,
+    NodeType aType,
+    QQuickWindow* aWindow,
+    const QSizeF& aSize,
+    ClockTheme* aTheme)
+{
+    switch (aType) {
+    case NodeHour:
+        initHour(aTxNode, aSize, aTheme);
+        break;
+    case NodeMin:
+        initMin(aTxNode, aSize, aTheme);
+        break;
+    case NodeSec:
+        initSec(aTxNode, aWindow, aSize);
+        break;
+    default:
+        HWARN("Unsupported node type" << aType);
+        break;
+    }
 }

@@ -56,12 +56,10 @@ public:
         iRenderCount++;
         QDateTime now = QDateTime::currentDateTime();
         const int ms = iStartTime.msecsTo(now);
-        if (ms >= 1000) {
-            if (iRenderCount > 0) {
-                HDEBUG(aOwner->metaObject()->className() << ((void*)aOwner) <<
-                    iRenderCount*1000.0/ms << "frames per second");
-                iRenderCount = 0;
-            }
+        if (ms >= 1000 && iRenderCount >= 10) {
+            HDEBUG(aOwner->metaObject()->className() << ((void*)aOwner) <<
+                iRenderCount*1000.0/ms << "frames per second");
+            iRenderCount = 0;
             iStartTime = now;
         }
     }

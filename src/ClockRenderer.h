@@ -46,6 +46,11 @@
 #include <QSGGeometryNode>
 #include <QSGSimpleTextureNode>
 
+#define QUICK_CLOCK_MIN_UPDATE_INTERVAL_DISPLAY_ON  (15)
+#define QUICK_CLOCK_MIN_UPDATE_INTERVAL_DISPLAY_OFF (200)
+#define QUICK_CLOCK_MIN_UPDATE_INTERVAL \
+        QUICK_CLOCK_MIN_UPDATE_INTERVAL_DISPLAY_ON
+
 class ClockRenderer
 {
 public:
@@ -55,8 +60,16 @@ public:
         ~ImageNode();
     };
 
+    enum NodeType {
+        NodeHour,
+        NodeMin,
+        NodeSec
+    };
+
 public:
     virtual ~ClockRenderer();
+
+    // Raster interface
     virtual void paintDialPlate(QPainter* aPainter, const QSize& aSize,
         ClockTheme* aTheme, bool aDrawBackground) = 0;
     virtual void paintHourMinHands(QPainter* aPainter, const QSize& aSize,
@@ -64,17 +77,23 @@ public:
     virtual void paintSecHand(QPainter* aPainter, const QSize& aSize,
         const QTime& aTime, ClockTheme* aTheme) = 0;
 
-    virtual void initSecNode(QSGTransformNode* aTxNode, const QSizeF& aSize,
-        QQuickWindow* aWindow, ClockTheme* aTheme) = 0;
-    virtual QMatrix4x4 secNodeMatrix(const QSize& aSize, const QTime& aTime);
+    // Optimized interface
+    virtual int msecUntilNextUpdate(NodeType aType, const QTime& aTime);
+    virtual void initNode(QSGTransformNode* aTxNode, NodeType aType,
+        QQuickWindow* aWindow, const QSizeF& aSize, ClockTheme* aTheme) = 0;
+    virtual QMatrix4x4 nodeMatrix(NodeType aType, const QSize& aSize,
+        const QTime& aTime);
 
     QString id() const { return iId; }
 
     // Utilities
+    static QSGGeometry* rectGeometry(const QRectF& aRect);
     static QSGGeometry* circleGeometry(const QPointF& aCenter, qreal aRadius);
     static QSGGeometry* ringGeometry(const QPointF& aCenter, qreal aRadius,
         qreal aThickness);
-    static QSGNode* geometryNode(QSGGeometry* aGeometry, const QColor& color);
+
+    static QSGNode* geometryNode(QSGGeometry* aGeometry, const QColor& aColor);
+    static QSGNode* rectNode(const QRectF& aRect, const QColor& color);
     static QSGNode* circleNode(const QPointF& aCenter, qreal aRadius,
         const QColor& aColor);
     static QSGNode* ringNode(const QPointF& aCenter, qreal aRadius,
@@ -100,5 +119,14 @@ protected:
 private:
     QString iId;
 };
+
+inline QSGNode* ClockRenderer::circleNode(const QPointF& aCenter,
+    qreal aRadius, const QColor& aColor)
+    { return geometryNode(circleGeometry(aCenter, aRadius), aColor); }
+inline QSGNode* ClockRenderer::ringNode(const QPointF& aCenter,
+    qreal aRadius, qreal aThickness, const QColor& aColor)
+    { return geometryNode(ringGeometry(aCenter, aRadius, aThickness), aColor); }
+inline QSGNode* ClockRenderer::rectNode(const QRectF& aRect, const QColor& aColor)
+    { return geometryNode(rectGeometry(aRect), aColor); }
 
 #endif // CLOCK_RENDERER_H

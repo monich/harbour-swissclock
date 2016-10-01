@@ -34,6 +34,8 @@
 #include "ClockRenderer.h"
 #include "ClockDebug.h"
 
+#include <math.h>
+
 const QString ClockRenderer::SWISS_RAILROAD("SwissRailroad");
 
 class SwissRailroad : public ClockRenderer
@@ -46,9 +48,15 @@ public:
         const QTime& aTime, ClockTheme* aTheme);
     virtual void paintSecHand(QPainter* aPainter, const QSize& aSize,
         const QTime& aTime, ClockTheme* aTheme);
-    virtual void initSecNode(QSGTransformNode* aTxNode, const QSizeF& aSize,
-        QQuickWindow* aWindow, ClockTheme* aTheme);
+    virtual void initNode(QSGTransformNode* aTxNode, NodeType aType,
+        QQuickWindow* aWindow, const QSizeF& aSize, ClockTheme* aTheme);
 
+    void initHour(QSGTransformNode* aTxNode, const QSizeF& aSize,
+        ClockTheme* aTheme);
+    void initMin(QSGTransformNode* aTxNode, const QSizeF& aSize,
+        ClockTheme* aTheme);
+    void initSec(QSGTransformNode* aTxNode, QQuickWindow* aWindow,
+        const QSizeF& aSize);
     static void paintHand(QPainter* aPainter, const QRectF& aRect,
         qreal aAngle, const QBrush& aBrush,
         qreal aX = 0.0, qreal aY = 0.0);
@@ -205,19 +213,61 @@ SwissRailroad::paintSecHand(
     aPainter->fillRect(secHandRect, iSecondHandBrush);
     aPainter->drawEllipse(center, rs1, rs1);
     aPainter->drawEllipse(QPointF(xs2,0), rs2, rs2);
+
+    const int rw = qMax((int)d/200, 2);
+    const int rb = qMax((rw/2) & ~1, 1);
     aPainter->setBrush(iWhite);
-    aPainter->drawEllipse(center, 2, 2);
+    aPainter->drawEllipse(center, rw, rw);
     aPainter->setBrush(iBlack);
-    aPainter->drawEllipse(center, 1, 1);
+    aPainter->drawEllipse(center, rb, rb);
     aPainter->restore();
 }
 
 void
-SwissRailroad::initSecNode(
+SwissRailroad::initHour(
     QSGTransformNode* aTxNode,
     const QSizeF& aSize,
-    QQuickWindow* aWindow,
     ClockTheme* aTheme)
+{
+    const qreal w = aSize.width();
+    const qreal h = aSize.height();
+    const qreal d = qMin(w, h);
+    const qreal y = qMax(qreal(round(d * 0.02)), qreal(1));
+    const qreal x1 = -round(d * qreal(0.135));
+    const qreal x2 = round(d * qreal(0.277));
+    QRectF rect(round(w/2)+x1, round(h/2)-y, (x2-x1), 2*y);
+    aTxNode->appendChildNode(rectNode(rect, aTheme->iHourMinHandColor));
+}
+
+void
+SwissRailroad::initMin(
+    QSGTransformNode* aTxNode,
+    const QSizeF& aSize,
+    ClockTheme* aTheme)
+{
+    const qreal w = aSize.width();
+    const qreal h = aSize.height();
+    const qreal d = qMin(w, h);
+    const qreal x1 = -round(d * qreal(0.135));
+    const qreal x2 = round(d * qreal(0.423));
+    const qreal y1 = qMax(qreal(round(d * 0.02)), qreal(1));
+    const qreal dx = (x2-x1);
+    const qreal dy = 2*y1;
+    const qreal x0 = round(w/2)+x1;
+    const qreal y0 = round(h/2)-y1;
+
+    aTxNode->appendChildNode(rectNode(QRectF(x0-2, y0-2, dx+4, dy+4),
+        aTheme->iHandShadowColor2));
+    aTxNode->appendChildNode(rectNode(QRectF(x0-1, y0-1, dx+2, dy+2),
+        aTheme->iHandShadowColor1));
+    aTxNode->appendChildNode(rectNode(QRectF(x0, y0, dx, dy),
+        aTheme->iHourMinHandColor));
+}
+void
+SwissRailroad::initSec(
+    QSGTransformNode* aTxNode,
+    QQuickWindow* aWindow,
+    const QSizeF& aSize)
 {
     const qreal w = aSize.width();
     const qreal h = aSize.height();
@@ -226,13 +276,13 @@ SwissRailroad::initSecNode(
     const qreal y0 = h/2;
 
     // Draw the second hand
-    const qreal rs = qMax(d / 50, qreal(5));
+    const qreal rs = qMax(d / 52, qreal(5));
     const qreal x1 = x0 + d * 10 / 27;
     const qreal xh1 = x0 - (d * 10 / 74);
 
     const qreal rc = qMax((int)d/200, 2);
+    const qreal ds = rs;
     const qreal rs2 = d/26;
-    const qreal ds = rs-3;
     const qreal xs1 = xh1 + d / 140;
     const qreal xs2 = x1 - d / 50 - rs2;
 
@@ -248,4 +298,28 @@ SwissRailroad::initSecNode(
     aTxNode->appendChildNode(circleNode(QPointF(xs2, y0), rs2, iSecondHandColor));
     aTxNode->parent()->appendChildNode(centerDiskNode(aWindow,
         QPointF(x0,y0), rs, rc, iSecondHandColor));
+}
+
+void
+SwissRailroad::initNode(
+    QSGTransformNode* aTxNode,
+    NodeType aType,
+    QQuickWindow* aWindow,
+    const QSizeF& aSize,
+    ClockTheme* aTheme)
+{
+    switch (aType) {
+    case NodeHour:
+        initHour(aTxNode, aSize, aTheme);
+        break;
+    case NodeMin:
+        initMin(aTxNode, aSize, aTheme);
+        break;
+    case NodeSec:
+        initSec(aTxNode, aWindow, aSize);
+        break;
+    default:
+        HWARN("Unsupported node type" << aType);
+        break;
+    }
 }

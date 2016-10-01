@@ -47,10 +47,7 @@
 #include <QPixmap>
 #include <QList>
 
-#define QUICK_CLOCK_MIN_UPDATE_INTERVAL_DISPLAY_ON  (15)
-#define QUICK_CLOCK_MIN_UPDATE_INTERVAL_DISPLAY_OFF (200)
-
-class QuickClockSeconds;
+class QuickClockLayer;
 
 class QuickClock: public QQuickPaintedItem
 {
@@ -94,6 +91,7 @@ Q_SIGNALS:
     void styleChanged();
     void runningChanged();
     void updatesEnabledChanged();
+    void fullUpdateRequested();
 
 private Q_SLOTS:
     void onWidthChanged();
@@ -102,12 +100,13 @@ private Q_SLOTS:
     void onUpdated();
 
 protected:
-    virtual void paint(QPainter *painter);
+    virtual void paint(QPainter* aPainter);
     virtual void timerEvent(QTimerEvent* aEvent);
 
 private:
     bool updateRenderingType();
     void requestUpdate(bool aFullUpdate);
+    void paintDialPlatePixmap(const QSize& aSize);
     void paintOffScreenNoSec(QPainter* aPainter, const QSize& aSize,
          const QTime& aTime);
     void repaintHourMin(const QSize& aSize, const QTime& aTime);
@@ -126,7 +125,7 @@ private:
     ClockTheme* iThemeInverted;
     QList<ClockRenderer*> iRenderers;
     ClockRenderer* iRenderer;
-    QuickClockSeconds* iSecLayer;
+    QuickClockLayer* iLayers;
     QPixmap* iDialPlatePixmap;
     QPixmap* iHourMinPixmap;
     QTime iPaintTimeNoSec;

@@ -56,31 +56,65 @@ ClockRenderer::~ClockRenderer()
 {
 }
 
+int
+ClockRenderer::msecUntilNextUpdate(
+    NodeType aType,
+    const QTime& aTime)
+{
+    if (aType == NodeSec || aTime.second() == 0) {
+        return QUICK_CLOCK_MIN_UPDATE_INTERVAL;
+    } else {
+        // 59 seconds out of 60 hour and minute handls are not changing
+        // positions. Make this timer fire one second eariler so that we
+        // could aim better.
+        const int msec = ((58 - aTime.second()) * 1000) + 1000 - aTime.msec();
+        return qMax(msec, QUICK_CLOCK_MIN_UPDATE_INTERVAL);
+    }
+}
+
 QMatrix4x4
-ClockRenderer::secNodeMatrix(
+ClockRenderer::nodeMatrix(
+    NodeType aType,
     const QSize& aSize,
     const QTime& aTime)
 {
+    qreal a;
+
+    if (aType == NodeSec) {
+        a = 6 * (aTime.second() + aTime.msec()/1000.0) - 90;
+    } else {
+        QTime t;
+        if (aTime.second() == 0) {
+            QTime t1 = aTime.addSecs(-1);
+            t = QTime(t1.hour(), t1.minute(), 60*t1.msec()/1000);
+        } else {
+            t = QTime(aTime.hour(), aTime.minute(), 0);
+        }
+        if (aType == NodeHour) {
+            a = 30*(t.hour() + (t.minute() + t.second()/60.0)/60) - 90;
+        } else {
+            a = 6*(t.minute() + (t.second() + t.msec()/1000.0)/60) - 90;
+        }
+    }
+
     qreal dx = aSize.width()/2;
     qreal dy = aSize.height()/2;
     return QMatrix4x4(QTransform::fromTranslate(dx, dy).
-        rotate(6.0 * (aTime.second() + aTime.msec()/1000.0) - 90).
-        translate(-dx, -dy));
+        rotate(a).translate(-dx, -dy));
 }
 
-QSGNode*
-ClockRenderer::geometryNode(
-    QSGGeometry* aGeometry,
-    const QColor& color)
+QSGGeometry*
+ClockRenderer::rectGeometry(
+    const QRectF& aRect)
 {
-    QSGFlatColorMaterial* m = new QSGFlatColorMaterial;
-    m->setColor(color);
-    QSGGeometryNode* node = new QSGGeometryNode;
-    node->setGeometry(aGeometry);
-    node->setMaterial(m);
-    node->setFlag(QSGNode::OwnsGeometry);
-    node->setFlag(QSGNode::OwnsMaterial);
-    return node;
+    QSGGeometry* g = new QSGGeometry(QSGGeometry::defaultAttributes_Point2D(), 4);
+    QSGGeometry::Point2D* v = g->vertexDataAsPoint2D();
+    g->setDrawingMode(GL_TRIANGLE_FAN);
+    v[0].x = aRect.left();  v[0].y = aRect.top();
+    v[1].x = v[0].x;        v[1].y = aRect.bottom();
+    v[2].x = aRect.right(); v[2].y = v[1].y;
+    v[3].x = v[2].x;        v[3].y = v[0].y;
+    return g;
 }
 
 QSGGeometry*
@@ -91,7 +125,7 @@ ClockRenderer::circleGeometry(
     const int n = 8*aRadius;
     const float x0 = aCenter.x();
     const float y0 = aCenter.y();
-    QSGGeometry* g = new QSGGeometry(QSGGeometry::defaultAttributes_Point2D(),n + 2);
+    QSGGeometry* g = new QSGGeometry(QSGGeometry::defaultAttributes_Point2D(), n+2);
     QSGGeometry::Point2D* v = g->vertexDataAsPoint2D();
     g->setDrawingMode(GL_TRIANGLE_FAN);
     v[0].x = x0;
@@ -115,7 +149,7 @@ ClockRenderer::ringGeometry(
     const float x0 = aCenter.x();
     const float y0 = aCenter.y();
     const float innerRadius = aRadius - qMin(aRadius, aThickness);
-    QSGGeometry* g = new QSGGeometry(QSGGeometry::defaultAttributes_Point2D(),2*(n+1));
+    QSGGeometry* g = new QSGGeometry(QSGGeometry::defaultAttributes_Point2D(), 2*(n+1));
     QSGGeometry::Point2D* v = g->vertexDataAsPoint2D();
     g->setDrawingMode(GL_TRIANGLE_STRIP);
     for (int i=0; i<n; i++) {
@@ -131,22 +165,18 @@ ClockRenderer::ringGeometry(
 }
 
 QSGNode*
-ClockRenderer::circleNode(
-    const QPointF& aCenter,
-    qreal aRadius,
+ClockRenderer::geometryNode(
+    QSGGeometry* aGeometry,
     const QColor& aColor)
 {
-    return geometryNode(circleGeometry(aCenter, aRadius), aColor);
-}
-
-QSGNode*
-ClockRenderer::ringNode(
-    const QPointF& aCenter,
-    qreal aRadius,
-    qreal aThickness,
-    const QColor& aColor)
-{
-    return geometryNode(ringGeometry(aCenter, aRadius, aThickness), aColor);
+    QSGFlatColorMaterial* m = new QSGFlatColorMaterial;
+    m->setColor(aColor);
+    QSGGeometryNode* node = new QSGGeometryNode;
+    node->setGeometry(aGeometry);
+    node->setMaterial(m);
+    node->setFlag(QSGNode::OwnsGeometry);
+    node->setFlag(QSGNode::OwnsMaterial);
+    return node;
 }
 
 QSGNode*

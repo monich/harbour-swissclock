@@ -39,9 +39,13 @@
 
 #define SUPER QQuickItem
 
-QuickClockLayer::QuickClockLayer(QuickClock* aParent) :
+QuickClockLayer::QuickClockLayer(
+    QQuickItem* aParent,
+    QuickClock* aClock,
+    ClockRenderer::NodeType aType) :
     SUPER(aParent),
-    iClock(aParent),
+    iClock(aClock),
+    iType(aType),
     iDirty(true)
 {
     setFlags(ItemHasContents);
@@ -51,7 +55,8 @@ QuickClockLayer::QuickClockLayer(QuickClock* aParent) :
     connect(aParent, SIGNAL(widthChanged()), SLOT(onWidthChanged()));
     connect(aParent, SIGNAL(heightChanged()), SLOT(onHeightChanged()));
     connect(aParent, SIGNAL(visibleChanged()), SLOT(onVisibleChanged()));
-    connect(aParent, SIGNAL(updatesEnabledChanged()), SLOT(onUpdatesEnabledChanged()));
+    connect(aClock, SIGNAL(fullUpdateRequested()), SLOT(onFullUpdateRequested()));
+    connect(aClock, SIGNAL(updatesEnabledChanged()), SLOT(onUpdatesEnabledChanged()));
 }
 
 void
@@ -100,9 +105,16 @@ QuickClockLayer::onVisibleChanged()
 }
 
 void
+QuickClockLayer::onFullUpdateRequested()
+{
+    requestUpdate(true);
+}
+
+void
 QuickClockLayer::onUpdated()
 {
-    int msec = msecUntilNextUpdate();
+    QTime t = QuickClock::currentTime();
+    int msec = renderer()->msecUntilNextUpdate(iType, t);
     if (msec == 0) {
         requestUpdate(false);
     } else if (msec > 0) {
@@ -144,14 +156,24 @@ QuickClockLayer::updatePaintNode(
     }
 
     if (Q_UNLIKELY(!aNode)) {
-        aNode = createNode(size);
+        aNode = new QSGNode;
+        QSGTransformNode* txNode = new QSGTransformNode;
+        aNode->appendChildNode(txNode);
+        renderer()->initNode(txNode, iType, window(), size, theme());
     }
 
     if (aNode) {
-        QTime time = QuickClock::currentTime();
-        updateNode(aNode, size, time);
+        QTime t = QuickClock::currentTime();
+        const QMatrix4x4 tx = renderer()->nodeMatrix(iType, size, t);
+        for (QSGNode* n = aNode->firstChild(); n; n = n->nextSibling()) {
+            if (n->type() == QSGNode::TransformNodeType) {
+                QSGTransformNode* txNode = (QSGTransformNode*)n;
+                txNode->setMatrix(tx);
+            }
+        }
         QMetaObject::invokeMethod(this, "onUpdated", Qt::QueuedConnection);
     }
 
+    CLOCK_PERFORMANCE_LOG_RECORD;
     return aNode;
 }

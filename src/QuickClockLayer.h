@@ -35,50 +35,46 @@
 #define QUICK_CLOCK_LAYER_H
 
 #include "QuickClock.h"
+#include "ClockRenderer.h"
 #include "ClockDebug.h"
 
 class QuickClockLayer: public QQuickItem {
     Q_OBJECT
 
 public:
-    explicit QuickClockLayer(QuickClock* aParent);
+    QuickClockLayer(QQuickItem* aParent, QuickClock* aClock, ClockRenderer::NodeType aType);
+
+private:
+    ClockTheme* theme() const;
+    ClockRenderer* renderer() const;
+    bool updatesEnabled() const;
     void requestUpdate(bool aFullUpdate);
 
 protected:
-    bool displayOff() const;
-    bool updatesEnabled() const;
-    HarbourSystemState* systemState() const;
-    ClockRenderer* renderer() const;
-    ClockTheme* theme() const;
-
     QSGNode* updatePaintNode(QSGNode* aNode, UpdatePaintNodeData* aData);
     void timerEvent(QTimerEvent* aEvent);
-
-    virtual int msecUntilNextUpdate() = 0;
-    virtual QSGNode* createNode(const QSize& aSize) = 0;
-    virtual void updateNode(QSGNode* aNode, const QSize& aSize, const QTime& aTime) = 0;
 
 private Q_SLOTS:
     void onUpdatesEnabledChanged();
     void onWidthChanged();
     void onHeightChanged();
     void onVisibleChanged();
+    void onFullUpdateRequested();
     void onUpdated();
 
-protected:
-    CLOCK_PERFORMANCE_LOG_DEFINE
-
 private:
+    CLOCK_PERFORMANCE_LOG_DEFINE
     QBasicTimer iRepaintTimer;
     QuickClock* iClock;
+    ClockRenderer::NodeType iType;
     bool iDirty;
 };
 
-inline bool QuickClockLayer::updatesEnabled() const
-    { return iClock->updatesEnabled(); }
-inline ClockRenderer* QuickClockLayer::renderer() const
-    { return iClock->renderer(); }
 inline ClockTheme* QuickClockLayer::theme() const
     { return iClock->theme(); }
+inline ClockRenderer* QuickClockLayer::renderer() const
+    { return iClock->renderer(); }
+inline bool QuickClockLayer::updatesEnabled() const
+    { return iClock->updatesEnabled(); }
 
 #endif // QUICK_CLOCK_LAYER_H
