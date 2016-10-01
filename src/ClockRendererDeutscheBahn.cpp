@@ -206,22 +206,10 @@ DeutscheBahn::paintSecHand(
     aPainter->translate(w/2, h/2);
     aPainter->rotate(6.0 * (aTime.second() + aTime.msec()/1000.0) - 90);
 
-    QBrush shadowBrush(aTheme->iDialShadowColor);
-    QPen shadowPen(shadowBrush, dr);
-    aPainter->setPen(Qt::NoPen);
-    aPainter->setBrush(shadowBrush);
-    aPainter->translate(1, 1);
-    aPainter->drawPath(p1);
-    aPainter->drawPath(p2);
-    aPainter->setBrush(Qt::NoBrush);
-    aPainter->setPen(shadowPen);
-    aPainter->drawEllipse(QPointF(x2,0), r, r);
-
     QBrush secBrush(iSecondHandColor);
     QPen secPen(secBrush, dr);
     aPainter->setPen(Qt::NoPen);
     aPainter->setBrush(secBrush);
-    aPainter->translate(-1, -1);
     aPainter->drawPath(p1);
     aPainter->drawPath(p2);
     aPainter->setBrush(Qt::NoBrush);
@@ -285,10 +273,10 @@ DeutscheBahn::initSecNode(
     v[2].x = v[1].x; v[2].y = y0-y4;
     v[3].x = v[0].x; v[3].y = y0-y3;
     aTxNode->appendChildNode(geometryNode(g, iSecondHandColor));
-    aTxNode->appendChildNode(ringNode(QPointF(x0+x2,y0), r1, dr, iSecondHandColor));
+    aTxNode->appendChildNode(ringNode(QPointF(x0+x2,y0), r1+dr/2, dr, iSecondHandColor));
 
     QPointF center(x0,y0);
     QSGNode* rootNode = aTxNode->parent();
-    rootNode->appendChildNode(circleNode(center, r2, aTheme->iHandShadowColor1));
-    rootNode->appendChildNode(circleNode(center, r1, aTheme->iHourMinHandColor));
+    rootNode->insertChildNodeBefore(circleNode(center, r2, aTheme->iHandShadowColor1), aTxNode);
+    rootNode->insertChildNodeAfter(circleNode(center, r1, aTheme->iHourMinHandColor), aTxNode);
 }

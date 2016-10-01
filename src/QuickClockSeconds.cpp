@@ -68,7 +68,12 @@ QuickClockSeconds::updateNode(
     const QSize& aSize,
     const QTime& aTime)
 {
-    QSGTransformNode* txNode = (QSGTransformNode*)aNode->firstChild();
-    txNode->setMatrix(renderer()->secNodeMatrix(aSize, aTime));
+    QMatrix4x4 matrix = renderer()->secNodeMatrix(aSize, aTime);
+    for (QSGNode* n = aNode->firstChild(); n; n = n->nextSibling()) {
+        if (n->type() == QSGNode::TransformNodeType) {
+            QSGTransformNode* txNode = (QSGTransformNode*)n;
+            txNode->setMatrix(matrix);
+        }
+    }
     CLOCK_PERFORMANCE_LOG_RECORD;
 }

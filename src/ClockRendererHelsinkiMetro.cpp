@@ -35,6 +35,7 @@
 #include "ClockDebug.h"
 
 #include <QPainterPath>
+#include <math.h>
 
 const QString ClockRenderer::HELSINKI_METRO("HelsinkiMetro");
 
@@ -281,8 +282,9 @@ HelsinkiMetro::initSecNode(
     const qreal w = aSize.width();
     const qreal h = aSize.height();
     const qreal d = qMin(w, h);
-    const qreal x0 = w/2;
-    const qreal y0 = h/2;
+    const qreal rc = qMax((int)d/200, 2);
+    const qreal x0 = round(w/2);
+    const qreal y0 = round(h/2);
     const qreal r = qMax((int)(d / 23), 3);
     const qreal y = qMax(qreal(1), qreal(d / 195));
     const qreal x1 = x0 - (d/6.97);
@@ -299,9 +301,6 @@ HelsinkiMetro::initSecNode(
     v[4].x = x2-y; v[4].y = y0+y;
     v[5].x = x1+y; v[5].y = y0+y;
     aTxNode->appendChildNode(geometryNode(g, iSecondHandColor));
-
-    QPointF center(x0,y0);
-    QSGNode* rootNode = aTxNode->parent();
-    rootNode->appendChildNode(circleNode(center, r, iSecondHandColor));
-    rootNode->appendChildNode(new CenterNode(aWindow, center));
+    aTxNode->parent()->appendChildNode(centerDiskNode(aWindow,
+        QPointF(x0,y0), r, rc, iSecondHandColor));
 }

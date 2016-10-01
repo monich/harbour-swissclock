@@ -37,68 +37,18 @@
 #include <qmath.h>
 #include <QSGFlatColorMaterial>
 
-ClockRenderer::CenterDiskNode::CenterDiskNode(
+ClockRenderer::ImageNode::ImageNode(
     QQuickWindow* aWindow,
-    const QPointF& aCenter,
-    const QBrush& aBrush,
-    int aRadius)
+    qreal aX,
+    qreal aY,
+    QImage aImage)
 {
-    QTRACE("- created");
-    const qreal diskSize = 2*aRadius;
-    QPointF center(0,0);
-    QPixmap pixmap(diskSize, diskSize);
-    QPainter painter(&pixmap);
-    painter.setPen(Qt::NoPen);
-    painter.setBrush(aBrush);
-    painter.setRenderHint(QPainter::Antialiasing);
-    painter.setRenderHint(QPainter::HighQualityAntialiasing);
-    painter.setCompositionMode(QPainter::CompositionMode_Source);
-    painter.fillRect(QRectF(0, 0, diskSize, diskSize), Qt::transparent);
-    painter.translate(aRadius, aRadius);
-    painter.drawEllipse(center, aRadius-1, aRadius-1);
-    painter.setBrush(QBrush(Qt::white));
-    painter.drawEllipse(center, 2, 2);
-    painter.setBrush(QBrush(Qt::black));
-    painter.drawEllipse(center, 1, 1);
-    setTexture(aWindow->createTextureFromImage(pixmap.toImage()));
-    setRect(aCenter.x()-aRadius, aCenter.y()-aRadius, 2*aRadius, 2*aRadius);
-    setFlag(QSGNode::OwnedByParent);
+    setRect(aX, aY, aImage.width(), aImage.height());
+    setTexture(aWindow->createTextureFromImage(aImage));
 }
 
-ClockRenderer::CenterDiskNode::~CenterDiskNode()
+ClockRenderer::ImageNode::~ImageNode()
 {
-    QTRACE("- destroyed");
-    delete texture();
-}
-
-ClockRenderer::CenterNode::CenterNode(
-    QQuickWindow* aWindow,
-    const QPointF& aCenter)
-{
-    QTRACE("- created");
-    const qreal r = 2;
-    const qreal diskSize = 2*r;
-    QPointF center(0,0);
-    QPixmap pixmap(diskSize, diskSize);
-    QPainter painter(&pixmap);
-    painter.setPen(Qt::NoPen);
-    painter.setRenderHint(QPainter::Antialiasing);
-    painter.setRenderHint(QPainter::HighQualityAntialiasing);
-    painter.setCompositionMode(QPainter::CompositionMode_Source);
-    painter.fillRect(QRectF(0, 0, diskSize, diskSize), Qt::transparent);
-    painter.translate(r, r);
-    painter.setBrush(QBrush(Qt::white));
-    painter.drawEllipse(center, r, r);
-    painter.setBrush(QBrush(Qt::black));
-    painter.drawEllipse(center, 1, 1);
-    setTexture(aWindow->createTextureFromImage(pixmap.toImage()));
-    setRect(aCenter.x()-r, aCenter.y()-r, 2*r, 2*r);
-    setFlag(QSGNode::OwnedByParent);
-}
-
-ClockRenderer::CenterNode::~CenterNode()
-{
-    QTRACE("- destroyed");
     delete texture();
 }
 
@@ -118,7 +68,7 @@ ClockRenderer::secNodeMatrix(
         translate(-dx, -dy));
 }
 
-QSGGeometryNode*
+QSGNode*
 ClockRenderer::geometryNode(
     QSGGeometry* aGeometry,
     const QColor& color)
@@ -130,8 +80,6 @@ ClockRenderer::geometryNode(
     node->setMaterial(m);
     node->setFlag(QSGNode::OwnsGeometry);
     node->setFlag(QSGNode::OwnsMaterial);
-    node->setFlag(QSGNode::OwnedByParent);
-    node->markDirty(QSGNode::DirtyGeometry);
     return node;
 }
 
@@ -182,7 +130,7 @@ ClockRenderer::ringGeometry(
     return g;
 }
 
-QSGGeometryNode*
+QSGNode*
 ClockRenderer::circleNode(
     const QPointF& aCenter,
     qreal aRadius,
@@ -191,7 +139,7 @@ ClockRenderer::circleNode(
     return geometryNode(circleGeometry(aCenter, aRadius), aColor);
 }
 
-QSGGeometryNode*
+QSGNode*
 ClockRenderer::ringNode(
     const QPointF& aCenter,
     qreal aRadius,
@@ -199,4 +147,50 @@ ClockRenderer::ringNode(
     const QColor& aColor)
 {
     return geometryNode(ringGeometry(aCenter, aRadius, aThickness), aColor);
+}
+
+QSGNode*
+ClockRenderer::centerDiskNode(
+    QQuickWindow* aWindow,
+    const QPointF& aCenter,
+    qreal aRadius,
+    int aCenterRadius,
+    const QColor& aColor)
+{
+    QSGNode* disk = circleNode(aCenter, aRadius, aColor);
+    disk->appendChildNode(centerNode(aWindow, aCenter, aCenterRadius));
+    return disk;
+}
+
+QSGNode*
+ClockRenderer::centerNode(
+    QQuickWindow* aWindow,
+    const QPointF& aCenter,
+    int aRadius)
+{
+    const int r = qMax(aRadius & ~1, 2);
+    const int r2 = qMax((aRadius/2) & ~1, 1);
+
+    if (r2 == 1) {
+        const int d = 2*r;
+        QPointF center(0,0);
+        QPixmap pixmap(d, d);
+        pixmap.fill(Qt::transparent);
+        QPainter painter(&pixmap);
+        painter.setPen(Qt::NoPen);
+        painter.setRenderHint(QPainter::Antialiasing);
+        painter.setRenderHint(QPainter::HighQualityAntialiasing);
+        painter.setCompositionMode(QPainter::CompositionMode_SourceOver);
+        painter.translate(r, r);
+        painter.setBrush(QBrush(Qt::white));
+        painter.drawEllipse(center, r, r);
+        painter.setBrush(QBrush(Qt::black));
+        painter.drawEllipse(center, r2, r2);
+        return new ImageNode(aWindow, aCenter.x()-r, aCenter.y()-r,
+            pixmap.toImage());
+    } else {
+        QSGNode* node = circleNode(aCenter, r, Qt::white);
+        node->appendChildNode(circleNode(aCenter, r2, Qt::black));
+        return node;
+    }
 }

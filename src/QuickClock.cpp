@@ -39,8 +39,7 @@
 #include <QQuickWindow>
 #include <QSGSimpleTextureNode>
 
-#define AUTO_OPTIMIZE_SIZE (300)
-//#define AUTO_OPTIMIZE_SIZE (550)
+#define AUTO_OPTIMIZE_SIZE (400)
 
 #define SUPER QQuickPaintedItem
 

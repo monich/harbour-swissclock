@@ -37,31 +37,25 @@
 #include "ClockTheme.h"
 
 #include <QSize>
-#include <QBrush>
+#include <QColor>
+#include <QImage>
 #include <QPainter>
 #include <QDateTime>
 #include <QQuickWindow>
 #include <QMatrix4x4>
+#include <QSGGeometryNode>
 #include <QSGSimpleTextureNode>
 
 class ClockRenderer
 {
 public:
-    class CenterDiskNode : public QSGSimpleTextureNode
-    {
+    class ImageNode: public QSGSimpleTextureNode {
     public:
-        CenterDiskNode(QQuickWindow* aWindow, const QPointF& aCenter,
-            const QBrush& aBrush, int aRadius);
-        ~CenterDiskNode();
+        ImageNode(QQuickWindow* aWindow, qreal aX, qreal aY, QImage aImage);
+        ~ImageNode();
     };
 
-    class CenterNode : public QSGSimpleTextureNode
-    {
-    public:
-        CenterNode(QQuickWindow* aWindow, const QPointF& aCenter);
-        ~CenterNode();
-    };
-
+public:
     virtual ~ClockRenderer();
     virtual void paintDialPlate(QPainter* aPainter, const QSize& aSize,
         ClockTheme* aTheme, bool aDrawBackground) = 0;
@@ -74,17 +68,22 @@ public:
         QQuickWindow* aWindow, ClockTheme* aTheme) = 0;
     virtual QMatrix4x4 secNodeMatrix(const QSize& aSize, const QTime& aTime);
 
+    QString id() const { return iId; }
+
+    // Utilities
     static QSGGeometry* circleGeometry(const QPointF& aCenter, qreal aRadius);
     static QSGGeometry* ringGeometry(const QPointF& aCenter, qreal aRadius,
         qreal aThickness);
-    static QSGGeometryNode* geometryNode(QSGGeometry* aGeometry,
-        const QColor& color);
-    static QSGGeometryNode* circleNode(const QPointF& aCenter, qreal aRadius,
+    static QSGNode* geometryNode(QSGGeometry* aGeometry, const QColor& color);
+    static QSGNode* circleNode(const QPointF& aCenter, qreal aRadius,
         const QColor& aColor);
-    static QSGGeometryNode* ringNode(const QPointF& aCenter, qreal aRadius,
+    static QSGNode* ringNode(const QPointF& aCenter, qreal aRadius,
         qreal aThickness, const QColor& aColor);
-
-    QString id() const { return iId; }
+    static QSGNode* centerDiskNode(QQuickWindow* aWindow,
+        const QPointF& aCenter, qreal aRadius, int aCenterRadius,
+        const QColor& aColor);
+    static QSGNode* centerNode(QQuickWindow* aWindow, const QPointF& aCenter,
+        int aRadius);
 
 public:
     static const QString SWISS_RAILROAD;

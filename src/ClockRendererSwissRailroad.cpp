@@ -230,6 +230,7 @@ SwissRailroad::initSecNode(
     const qreal x1 = x0 + d * 10 / 27;
     const qreal xh1 = x0 - (d * 10 / 74);
 
+    const qreal rc = qMax((int)d/200, 2);
     const qreal rs2 = d/26;
     const qreal ds = rs-3;
     const qreal xs1 = xh1 + d / 140;
@@ -245,7 +246,6 @@ SwissRailroad::initSecNode(
     v[3].x = xs2;  v[3].y = v[0].y;
     aTxNode->appendChildNode(geometryNode(g, iSecondHandColor));
     aTxNode->appendChildNode(circleNode(QPointF(xs2, y0), rs2, iSecondHandColor));
-
-    QPointF center(x0,y0);
-    aTxNode->parent()->appendChildNode(new CenterDiskNode(aWindow, center, iSecondHandColor, rs));
+    aTxNode->parent()->appendChildNode(centerDiskNode(aWindow,
+        QPointF(x0,y0), rs, rc, iSecondHandColor));
 }
