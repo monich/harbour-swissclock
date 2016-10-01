@@ -39,45 +39,13 @@
 #include <QQuickWindow>
 #include <QSGSimpleTextureNode>
 
-#define UPDATE_INTERVAL_WITH_DISPLAY_ON  (10)
-#define UPDATE_INTERVAL_WITH_DISPLAY_OFF (200)
 #define AUTO_OPTIMIZE_SIZE (300)
 //#define AUTO_OPTIMIZE_SIZE (550)
 
-class QuickClock::Node : public QSGSimpleTextureNode
-{
-public:
-    Node(const QRect& aRect);
-    ~Node();
-    void update(QQuickWindow* aWindow, QImage aImage);
-private:
-    QRect iRect;
-    QImage iImage;
-};
-
-QuickClock::Node::Node(const QRect& aRect) : iRect(aRect)
-{
-    setRect(QRectF(aRect));
-    setFlag(OwnedByParent);
-}
-
-void QuickClock::Node::update(QQuickWindow* aWindow, QImage aImage)
-{
-    delete texture();
-    setTexture(aWindow->createTextureFromImage(QImage(aImage.bits() +
-        iRect.x()*aImage.depth()/8 + iRect.y()*aImage.bytesPerLine(),
-        iRect.width(), iRect.height(), aImage.bytesPerLine(),
-        aImage.format())));
-    iImage = aImage; // iImage holds the data
-}
-
-QuickClock::Node::~Node()
-{
-    delete texture();
-}
+#define SUPER QQuickPaintedItem
 
 QuickClock::QuickClock(QQuickItem* aParent) :
-    QQuickItem(aParent),
+    SUPER(aParent),
     iSystemState(HarbourSystemState::sharedInstance()),
     iRenderType(DEFAULT_RENDER_TYPE),
     iInvertColors(DEFAULT_INVERT_COLORS),
@@ -91,7 +59,6 @@ QuickClock::QuickClock(QQuickItem* aParent) :
     iSecLayer(NULL),
     iDialPlatePixmap(NULL),
     iHourMinPixmap(NULL),
-    iRepaintTimer(new QTimer(this)),
     iPaintHour(0),
     iPaintMinute(0)
 {
@@ -103,17 +70,11 @@ QuickClock::QuickClock(QQuickItem* aParent) :
     iRenderers.append(ClockRenderer::newDeutscheBahn());
     setStyle(DEFAULT_CLOCK_STYLE);
 
-    iRepaintTimer->setSingleShot(true);
-    iRepaintTimer->setInterval(UPDATE_INTERVAL_WITH_DISPLAY_ON);
-    connect(iRepaintTimer, SIGNAL(timeout()), SLOT(onRepaintTimer()));
-
-    HarbourSystemState* s = iSystemState.data();
-    connect(s, SIGNAL(lockModeChanged()), SLOT(onLockModeChanged()));
-    connect(s, SIGNAL(displayStatusChanged()), SLOT(onDisplayStatusChanged()));
+    iUpdatesEnabled = updatesEnabled();
+    connect(iSystemState.data(), SIGNAL(lockModeChanged()), SLOT(checkUpdatesEnabled()));
+    connect(iSystemState.data(), SIGNAL(displayStatusChanged()), SLOT(checkUpdatesEnabled()));
     connect(this, SIGNAL(widthChanged()), SLOT(onWidthChanged()));
     connect(this, SIGNAL(heightChanged()), SLOT(onHeightChanged()));
-    onDisplayStatusChanged();
-    onLockModeChanged();
     updateRenderingType();
     setRunning(true);
 }
@@ -128,7 +89,8 @@ QuickClock::~QuickClock()
     qDeleteAll(iRenderers);
 }
 
-QTime QuickClock::currentTime()
+QTime
+QuickClock::currentTime()
 {
 #if HARBOUR_DEBUG
     static const char FIXED_TIME_UNINITIALIZED[] = "";
@@ -154,42 +116,33 @@ QTime QuickClock::currentTime()
     return QTime::currentTime();
 }
 
-ClockTheme* QuickClock::theme() const
-{
-    return iInvertColors ? iThemeInverted : iThemeDefault;
-}
-
-void QuickClock::invalidatePixmaps()
-{
-    iRepaintAll = true;
-    if (iSecLayer) {
-        iSecLayer->setDirty();
-    }
-}
-
-void QuickClock::setInvertColors(bool aValue)
+void
+QuickClock::setInvertColors(
+    bool aValue)
 {
     if (iInvertColors != aValue) {
         iInvertColors = aValue;
         Q_EMIT invertColorsChanged();
-        iRepaintAll = true;
         QTRACE("- requesting update");
         requestUpdate(true);
     }
 }
 
-void QuickClock::setDrawBackground(bool aValue)
+void
+QuickClock::setDrawBackground(
+    bool aValue)
 {
     if (iDrawBackground != aValue) {
         iDrawBackground = aValue;
         Q_EMIT drawBackgroundChanged();
-        iRepaintAll = true;
         QTRACE("- requesting update");
         requestUpdate(true);
     }
 }
 
-void QuickClock::setStyle(QString aValue)
+void
+QuickClock::setStyle(
+    QString aValue)
 {
     if (aValue.isEmpty()) aValue = DEFAULT_CLOCK_STYLE;
     for (int i=0; i<iRenderers.count(); i++) {
@@ -211,35 +164,31 @@ void QuickClock::setStyle(QString aValue)
 }
 
 
-bool QuickClock::updatesEnabled() const
+bool
+QuickClock::updatesEnabled() const
 {
-    return iRunning && (!displayOff() || !displayLocked());
+    return iRunning && (!iSystemState->displayOff() || !iSystemState->locked());
 }
 
-void QuickClock::onDisplayStatusChanged()
+void
+QuickClock::checkUpdatesEnabled()
 {
-    QString displayStatus = iSystemState->displayStatus();
-    QTRACE("-" << displayStatus);
-    iRepaintTimer->setInterval(displayOff() ?
-        UPDATE_INTERVAL_WITH_DISPLAY_OFF :
-        UPDATE_INTERVAL_WITH_DISPLAY_ON);
     if (updatesEnabled()) {
-        QTRACE("- requesting update");
-        requestUpdate(false);
+        if (!iUpdatesEnabled) {
+            iUpdatesEnabled = true;
+            QTRACE("- requesting update");
+            requestUpdate(false);
+            Q_EMIT updatesEnabledChanged();
+        }
+    } else if (iUpdatesEnabled) {
+        iUpdatesEnabled = false;
+        Q_EMIT updatesEnabledChanged();
     }
 }
 
-void QuickClock::onLockModeChanged()
-{
-    QString lockMode = iSystemState->lockMode();
-    QTRACE("-" << lockMode);
-    if (updatesEnabled()) {
-        QTRACE("- requesting update");
-        requestUpdate(false);
-    }
-}
-
-void QuickClock::setRenderType(int aValue)
+void
+QuickClock::setRenderType(
+    int aValue)
 {
     ClockSettings::RenderType renderType = DEFAULT_RENDER_TYPE;
     switch ((ClockSettings::RenderType)aValue) {
@@ -258,19 +207,20 @@ void QuickClock::setRenderType(int aValue)
     }
 }
 
-void QuickClock::setRunning(bool aRunning)
+void
+QuickClock::setRunning(
+    bool aRunning)
 {
+    QTRACE("-" << aRunning);
     if (iRunning != aRunning) {
         iRunning = aRunning;
         Q_EMIT runningChanged();
-        if (updatesEnabled()) {
-            QTRACE("- requesting update");
-            requestUpdate(false);
-        }
+        checkUpdatesEnabled();
     }
 }
 
-void QuickClock::updateRenderingType()
+bool
+QuickClock::updateRenderingType()
 {
     bool optimized = iOptimized;
     switch (iRenderType) {
@@ -295,54 +245,57 @@ void QuickClock::updateRenderingType()
             iSecLayer = NULL;
         }
         requestUpdate(true);
+        return true;
     }
+    return false;
 }
 
-void QuickClock::onWidthChanged()
+void
+QuickClock::onWidthChanged()
 {
     QTRACE(width());
-    updateRenderingType();
+    if (!updateRenderingType()) {
+        requestUpdate(true);
+    }
 }
 
-void QuickClock::onHeightChanged()
+void
+QuickClock::onHeightChanged()
 {
     QTRACE(height());
-    updateRenderingType();
-}
-
-void QuickClock::onRepaintTimer()
-{
-    if (updatesEnabled()) {
-        requestUpdate(false);
-    } else {
-        QTRACE("- stopping updates");
+    if (!updateRenderingType()) {
+        requestUpdate(true);
     }
 }
 
-void QuickClock::requestUpdate(bool aFullUpdate)
+void
+QuickClock::timerEvent(
+    QTimerEvent* aEvent)
 {
-    if (Q_UNLIKELY(aFullUpdate)) {
-        invalidatePixmaps();
-        update();
-    } else {
-        QTime time = currentTime();
-        if (time.second() == 0 ||
-            time.minute() != iPaintMinute ||
-            time.hour() != iPaintHour) {
-            update();
+    if (aEvent->timerId() == iRepaintTimer.timerId()) {
+        if (updatesEnabled()) {
+            requestUpdate(false);
+        } else {
+            QTRACE("- stopping updates");
+            iRepaintTimer.stop();
         }
-    }
-    if (iSecLayer) {
-        iSecLayer->update();
+    } else {
+        SUPER::timerEvent(aEvent);
     }
 }
 
-void QuickClock::scheduleUpdate()
+void
+QuickClock::requestUpdate(
+    bool aFullUpdate)
 {
-    QMetaObject::invokeMethod(iRepaintTimer, "start", Qt::QueuedConnection);
+    if (aFullUpdate) {
+        iRepaintAll = true;
+    }
+    update();
 }
 
-void QuickClock::paintOffScreenNoSec(
+void
+QuickClock::paintOffScreenNoSec(
     QPainter* aPainter,
     const QSize& aSize,
     const QTime& aTime)
@@ -351,13 +304,11 @@ void QuickClock::paintOffScreenNoSec(
         delete iDialPlatePixmap;
         iDialPlatePixmap = new QPixmap(aSize);
 
-        HDEBUG("drawing dial plate");
+        HDEBUG("drawing dial plate" << aSize.width() << "x" << aSize.height());
         QPainter painter(iDialPlatePixmap);
-
         QRectF rect(QPoint(0,0), aSize);
         painter.setCompositionMode(QPainter::CompositionMode_Source);
         painter.fillRect(rect, QBrush(Qt::transparent));
-
         painter.setRenderHint(QPainter::Antialiasing);
         painter.setRenderHint(QPainter::HighQualityAntialiasing);
         aPainter->setCompositionMode(QPainter::CompositionMode_SourceOver);
@@ -374,12 +325,17 @@ void QuickClock::paintOffScreenNoSec(
     aPainter->restore();
 }
 
-void QuickClock::repaintHourMin(const QSize& aSize, const QTime& aTime)
+void
+QuickClock::repaintHourMin(
+    const QSize& aSize,
+    const QTime& aTime)
 {
     delete iHourMinPixmap;
     iHourMinPixmap = new QPixmap(aSize);
-    iHourMinPixmap->fill(Qt::transparent);
     QPainter painter(iHourMinPixmap);
+    QRectF rect(QPoint(0,0), aSize);
+    painter.setCompositionMode(QPainter::CompositionMode_Source);
+    painter.fillRect(rect, QBrush(Qt::transparent));
     if (Q_UNLIKELY(aTime.second() == 0)) {
         QTime t1 = aTime.addSecs(-1);
         QTime t2(t1.hour(), t1.minute(), 60*t1.msec()/1000);
@@ -388,80 +344,73 @@ void QuickClock::repaintHourMin(const QSize& aSize, const QTime& aTime)
         paintOffScreenNoSec(&painter, aSize, t2);
     } else {
         QTime t1(aTime.hour(), aTime.minute(), 0);
-        QTRACE("- drawing hour and minute hands" <<
+        QVERBOSE("- drawing hour and minute hands" <<
             qPrintable(t1.toString("hh:mm:ss.zzz")));
         paintOffScreenNoSec(&painter, aSize, t1);
     }
 }
 
-QuickClock::Node* QuickClock::paintSecNode(const QSize& aSize,
-    const QTime& aTime)
+int
+QuickClock::minUpdateInterval() const
 {
-    QPixmap pixmap(aSize);
-    pixmap.fill(Qt::transparent);
-
-    QPainter painter(&pixmap);
-    painter.drawPixmap(0, 0, *iHourMinPixmap);
-    painter.setRenderHint(QPainter::Antialiasing);
-    painter.setRenderHint(QPainter::HighQualityAntialiasing);
-    painter.setCompositionMode(QPainter::CompositionMode_SourceOver);
-
-    iRenderer->paintSecHand(&painter, aSize, aTime, theme());
-
-    Node* node = new Node(QRect(QPoint(0,0), aSize));
-    node->update(window(), pixmap.toImage());
-    return node;
+    return iSystemState->displayOff() ?
+        QUICK_CLOCK_MIN_UPDATE_INTERVAL_DISPLAY_OFF:
+        QUICK_CLOCK_MIN_UPDATE_INTERVAL_DISPLAY_ON;
 }
 
-QSGNode* QuickClock::updatePaintNode(QSGNode* aNode, UpdatePaintNodeData*)
+void
+QuickClock::onUpdated()
+{
+    int msec = 0;
+    if (iOptimized) {
+        QTime time = currentTime();
+        const int minMSec = minUpdateInterval();
+        msec = time.second() ? (1000 - time.msec()) : 0;
+        if (msec < minMSec) {
+            msec = minMSec;
+        }
+    } else {
+        msec = minUpdateInterval();
+    }
+    QVERBOSE("- update in" << msec << "msec");
+    iRepaintTimer.start(msec, this);
+}
+
+void
+QuickClock::paint(
+    QPainter *painter)
 {
     QTime time = currentTime();
-    //QTRACE("- rendering" << qPrintable(time.toString("hh:mm:ss.zzz")));
+    QVERBOSE("- rendering" << qPrintable(time.toString("hh:mm:ss.zzz")));
 
     const int w = (int)width() & ~1;
     const int h = (int)height() & ~1;
-    QRect rect(0, 0, w, h);
     QSize size(w, h);
 
-    bool updateHourMinNode = false;
     if (iRepaintAll) {
         iRepaintAll = false;
         delete iDialPlatePixmap;
         iDialPlatePixmap = NULL;
-        updateHourMinNode = true;
     }
 
-    Node* hourMinNode = (Node*)aNode;
-    if (!hourMinNode || hourMinNode->rect() != rect) {
-        delete hourMinNode;
-        aNode = hourMinNode = new Node(rect);
-        updateHourMinNode = true;
-    }
-
-    if (!updateHourMinNode &&
+    if (!iDialPlatePixmap ||
        (time.second() == 0 ||
         time.minute() != iPaintTimeNoSec.minute() ||
         time.hour() != iPaintTimeNoSec.hour())) {
-        updateHourMinNode = true;
-    }
-
-    if (updateHourMinNode) {
         repaintHourMin(size, time);
-        hourMinNode->update(window(), iHourMinPixmap->toImage());
     }
 
-    delete aNode->firstChild();
-    if (!iOptimized) {
-        hourMinNode->appendChildNode(paintSecNode(size, time));
-    }
+    painter->drawPixmap(0, 0, *iHourMinPixmap);
 
-    iPaintTimeNoSec = time;
-    scheduleUpdate();
-
-#ifdef CLOCK_PERFORMANCE_LOG_ENABLED
     if (!iOptimized) {
+        painter->save();
+        painter->setRenderHint(QPainter::Antialiasing);
+        painter->setRenderHint(QPainter::HighQualityAntialiasing);
+        painter->setCompositionMode(QPainter::CompositionMode_SourceOver);
+        iRenderer->paintSecHand(painter, size, time, theme());
+        painter->restore();
         CLOCK_PERFORMANCE_LOG_RECORD;
     }
-#endif
-    return aNode;
+
+    QMetaObject::invokeMethod(this, "onUpdated", Qt::QueuedConnection);
 }

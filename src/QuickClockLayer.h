@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014-2016 Jolla Ltd.
+ * Copyright (C) 2016 Jolla Ltd.
  * Contact: Slava Monich <slava.monich@jolla.com>
  *
  * You may use this file under the terms of the BSD license as follows:
@@ -31,20 +31,54 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef QUICK_CLOCK_SECONDS_H
-#define QUICK_CLOCK_SECONDS_H
+#ifndef QUICK_CLOCK_LAYER_H
+#define QUICK_CLOCK_LAYER_H
 
-#include "QuickClockLayer.h"
+#include "QuickClock.h"
+#include "ClockDebug.h"
 
-class QuickClockSeconds: public QuickClockLayer {
+class QuickClockLayer: public QQuickItem {
     Q_OBJECT
 
 public:
-    explicit QuickClockSeconds(QuickClock* aParent);
+    explicit QuickClockLayer(QuickClock* aParent);
+    void requestUpdate(bool aFullUpdate);
 
-    virtual int msecUntilNextUpdate();
-    virtual QSGNode* createNode(const QSize& aSize);
-    virtual void updateNode(QSGNode* aNode, const QSize& aSize, const QTime& aTime);
+protected:
+    bool displayOff() const;
+    bool updatesEnabled() const;
+    HarbourSystemState* systemState() const;
+    ClockRenderer* renderer() const;
+    ClockTheme* theme() const;
+
+    QSGNode* updatePaintNode(QSGNode* aNode, UpdatePaintNodeData* aData);
+    void timerEvent(QTimerEvent* aEvent);
+
+    virtual int msecUntilNextUpdate() = 0;
+    virtual QSGNode* createNode(const QSize& aSize) = 0;
+    virtual void updateNode(QSGNode* aNode, const QSize& aSize, const QTime& aTime) = 0;
+
+private Q_SLOTS:
+    void onUpdatesEnabledChanged();
+    void onWidthChanged();
+    void onHeightChanged();
+    void onVisibleChanged();
+    void onUpdated();
+
+protected:
+    CLOCK_PERFORMANCE_LOG_DEFINE
+
+private:
+    QBasicTimer iRepaintTimer;
+    QuickClock* iClock;
+    bool iDirty;
 };
 
-#endif // QUICK_CLOCK_SECONDS_H
+inline bool QuickClockLayer::updatesEnabled() const
+    { return iClock->updatesEnabled(); }
+inline ClockRenderer* QuickClockLayer::renderer() const
+    { return iClock->renderer(); }
+inline ClockTheme* QuickClockLayer::theme() const
+    { return iClock->theme(); }
+
+#endif // QUICK_CLOCK_LAYER_H

@@ -45,7 +45,7 @@ CoverBackground {
         style: globalClockSettings.clockStyle
         renderType: globalClockSettings.renderType
         anchors.centerIn: parent
-        width: Math.ceil(parent.width - 2*Theme.paddingMedium*parent.width/Theme.coverSizeLarge.width)
+        width: Math.floor(Math.ceil(parent.width - 2*Theme.paddingMedium*parent.width/Theme.coverSizeLarge.width)/2)*2
         height: width
     }
 }

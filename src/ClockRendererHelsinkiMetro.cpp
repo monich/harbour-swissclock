@@ -52,7 +52,6 @@ public:
     virtual void initSecNode(QSGTransformNode* aTxNode, const QSizeF& aSize,
         QQuickWindow* aWindow, ClockTheme* aTheme);
 
-    bool dropCachedItems(const QSizeF& aSize, ClockTheme* aTheme);
     static void paintHand(QPainter* aPainter, const QRectF& aRect,
         qreal aAngle, const QBrush& aBrush,
         qreal aX = 0.0, qreal aY = 0.0);
@@ -64,7 +63,6 @@ public:
     QPolygonF iPolygon;
     QSizeF iSize;
     QQuickWindow* iWindow;
-    ClockTheme* iTheme;
     QPixmap* iCenterDiskPixmap;
 };
 
@@ -81,7 +79,6 @@ HelsinkiMetro::HelsinkiMetro() :
     iBlack(Qt::black),
     iWhite(Qt::white),
     iWindow(NULL),
-    iTheme(NULL),
     iCenterDiskPixmap(NULL)
 {
 }
@@ -220,7 +217,10 @@ HelsinkiMetro::paintSecHand(
     const qreal d = qMin(w, h);
     const int r = qMax((int)(d / 23), 3);
 
-    dropCachedItems(aSize, aTheme);
+    if (iSize != aSize) {
+        iSize = aSize;
+        iPolygon.clear();
+    }
 
     if (iPolygon.isEmpty()) {
         const qreal y = qMax(qreal(1), qreal(d / 195));
@@ -269,30 +269,6 @@ HelsinkiMetro::paintSecHand(
     aPainter->restore();
     aPainter->drawPixmap(-(r+1), -(r+1), *iCenterDiskPixmap);
     aPainter->restore();
-}
-
-bool
-HelsinkiMetro::dropCachedItems(
-    const QSizeF& aSize,
-    ClockTheme* aTheme)
-{
-    bool sizeChanged;
-    if (iSize != aSize) {
-        iSize = aSize;
-        sizeChanged = true;
-    } else {
-        sizeChanged = false;
-    }
-
-    bool themeChanged;
-    if (iTheme != aTheme) {
-        iTheme = aTheme;
-        themeChanged = true;
-    } else {
-        themeChanged = false;
-    }
-
-    return (sizeChanged || themeChanged);
 }
 
 void

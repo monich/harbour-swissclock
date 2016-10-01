@@ -21,13 +21,16 @@ SOURCES += \
     src/ClockSettings.cpp \
     src/ClockTheme.cpp \
     src/QuickClock.cpp \
+    src/QuickClockLayer.cpp \
     src/QuickClockSeconds.cpp
+
 HEADERS += \
     src/ClockDebug.h \
     src/ClockRenderer.h \
     src/ClockSettings.h \
     src/ClockTheme.h \
     src/QuickClock.h \
+    src/QuickClockLayer.h \
     src/QuickClockSeconds.h
 
 HARBOUR_LIB = $${_PRO_FILE_PWD_}/harbour-lib

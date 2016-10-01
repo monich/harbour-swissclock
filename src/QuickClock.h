@@ -41,18 +41,19 @@
 
 #include "HarbourSystemState.h"
 
-#include <QQuickItem>
+#include <QQuickPaintedItem>
 #include <QDateTime>
 #include <QPainter>
 #include <QPixmap>
-#include <QTimer>
 #include <QList>
+
+#define QUICK_CLOCK_MIN_UPDATE_INTERVAL_DISPLAY_ON  (15)
+#define QUICK_CLOCK_MIN_UPDATE_INTERVAL_DISPLAY_OFF (200)
 
 class QuickClockSeconds;
 
-class QuickClock: public QQuickItem
+class QuickClock: public QQuickPaintedItem
 {
-    class Node;
     Q_OBJECT
     Q_PROPERTY(bool running READ running WRITE setRunning NOTIFY runningChanged)
     Q_PROPERTY(bool invertColors READ invertColors WRITE setInvertColors NOTIFY invertColorsChanged)
@@ -79,7 +80,8 @@ public:
     QString style() const;
     void setStyle(QString aValue);
 
-    void scheduleUpdate();
+    bool updatesEnabled() const;
+    int minUpdateInterval() const;
     ClockRenderer* renderer() const;
     ClockTheme* theme() const;
 
@@ -91,33 +93,30 @@ Q_SIGNALS:
     void renderTypeChanged();
     void styleChanged();
     void runningChanged();
+    void updatesEnabledChanged();
 
 private Q_SLOTS:
-    void onRepaintTimer();
     void onWidthChanged();
     void onHeightChanged();
-    void onLockModeChanged();
-    void onDisplayStatusChanged();
+    void checkUpdatesEnabled();
+    void onUpdated();
 
 protected:
-    QSGNode* updatePaintNode(QSGNode* aNode, UpdatePaintNodeData* aData);
+    virtual void paint(QPainter *painter);
+    virtual void timerEvent(QTimerEvent* aEvent);
 
 private:
-    bool displayOff() const;
-    bool displayLocked() const;
-    void updateRenderingType();
-    void invalidatePixmaps();
-    bool updatesEnabled() const;
+    bool updateRenderingType();
     void requestUpdate(bool aFullUpdate);
     void paintOffScreenNoSec(QPainter* aPainter, const QSize& aSize,
          const QTime& aTime);
     void repaintHourMin(const QSize& aSize, const QTime& aTime);
-    Node* paintSecNode(const QSize& aSize, const QTime& aTime);
 
 private:
     CLOCK_PERFORMANCE_LOG_DEFINE
     QSharedPointer<HarbourSystemState> iSystemState;
     ClockSettings::RenderType iRenderType;
+    bool iUpdatesEnabled;
     bool iInvertColors;
     bool iDrawBackground;
     bool iOptimized;
@@ -131,7 +130,7 @@ private:
     QPixmap* iDialPlatePixmap;
     QPixmap* iHourMinPixmap;
     QTime iPaintTimeNoSec;
-    QTimer* iRepaintTimer;
+    QBasicTimer iRepaintTimer;
     int iPaintHour;
     int iPaintMinute;
 };
@@ -150,9 +149,7 @@ inline QString QuickClock::style() const
     { return iRenderer->id(); }
 inline ClockRenderer* QuickClock::renderer() const
     { return iRenderer; }
-inline bool QuickClock::displayOff() const
-    { return iSystemState->displayStatus() == HarbourSystemState::MCE_DISPLAY_OFF; }
-inline bool QuickClock::displayLocked() const
-    { return iSystemState->lockMode() == HarbourSystemState::MCE_TK_LOCKED; }
+inline ClockTheme* QuickClock::theme() const
+    { return iInvertColors ? iThemeInverted : iThemeDefault; }
 
 #endif // QUICK_CLOCK_H

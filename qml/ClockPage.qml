@@ -122,18 +122,14 @@ Page {
                             horizontalAlignment: Text.AlignHCenter
                             verticalAlignment: Text.AlignVCenter
                         }
-                        Item {
-                            width: Math.ceil(clockItem.width - label2.width - label3.width - 4*Theme.paddingSmall)
+                        Clock {
+                            width: Math.floor(Math.ceil(clockItem.width - label2.width - label3.width - 4*Theme.paddingSmall)/2)*2
                             height: width
-                            Clock {
-                                id: clock
-                                anchors.fill: parent
-                                drawBackground: true
-                                style: clockModel[(index + initialIndex) % clockModel.length].style
-                                invertColors: globalClockSettings.invertColors
-                                renderType: globalClockSettings.renderType
-                                running: (index == slideshow.currentIndex) || slideshow.moving
-                            }
+                            drawBackground: true
+                            style: clockModel[(index + initialIndex) % clockModel.length].style
+                            invertColors: globalClockSettings.invertColors
+                            renderType: globalClockSettings.renderType
+                            running: (index == slideshow.currentIndex) || slideshow.moving
                             MouseArea {
                                 anchors.fill: parent
                                 onClicked: mouse.accepted = true

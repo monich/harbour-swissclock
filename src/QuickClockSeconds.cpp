@@ -37,81 +37,38 @@
 #include <QSGGeometryNode>
 #include <QSGSimpleRectNode>
 
+#define SUPER QuickClockLayer
+
 QuickClockSeconds::QuickClockSeconds(QuickClock* aParent) :
-    QQuickItem(aParent),
-    iClock(aParent),
-    iDirty(true)
+    SUPER(aParent)
 {
     QTRACE("- created");
-    setFlags(ItemHasContents);
-    setAntialiasing(true);
-    setX(0);
-    setY(0);
-    setWidth(aParent->width());
-    setHeight(aParent->height());
-    setVisible(aParent->isVisible());
-    connect(aParent, SIGNAL(widthChanged()), SLOT(onWidthChanged()));
-    connect(aParent, SIGNAL(heightChanged()), SLOT(onHeightChanged()));
-    connect(aParent, SIGNAL(visibleChanged()), SLOT(onVisibleChanged()));
-
-#ifdef CLOCK_PERFORMANCE_LOG
-    iRenderCount = 0;
-    iStartTime = QDateTime::currentDateTime();
-#endif // CLOCK_PERFORMANCE_LOG
 }
 
-QSGNode* QuickClockSeconds::updatePaintNode(QSGNode* aNode,
-    QQuickItem::UpdatePaintNodeData* aData)
+int
+QuickClockSeconds::msecUntilNextUpdate()
 {
-    QTime time = QuickClock::currentTime();
-    QSize size((int)width() & ~1, (int)height() & ~1);
-    //QTRACE("- rendering" << qPrintable(time.toString("hh:mm:ss.zzz")));
-
-    if (aNode && iDirty) {
-        delete aNode;
-        aNode = NULL;
-    }
-
-    QSGTransformNode* txNode;
-    if (Q_UNLIKELY(!aNode)) {
-        iDirty = false;
-        aNode = new QSGNode;
-        aNode->setFlag(QSGNode::OwnedByParent);
-
-        txNode = new QSGTransformNode;
-        txNode->setFlag(QSGNode::OwnedByParent);
-        aNode->appendChildNode(txNode);
-
-        renderer()->initSecNode(txNode, size, window(), theme());
-    } else {
-        txNode = (QSGTransformNode*)aNode->firstChild();
-    }
-
-    if (txNode) {
-        txNode->setMatrix(renderer()->secNodeMatrix(size, time));
-        iClock->scheduleUpdate();
-        CLOCK_PERFORMANCE_LOG_RECORD;
-    }
-
-    return aNode;
+    return QUICK_CLOCK_MIN_UPDATE_INTERVAL_DISPLAY_ON;
 }
 
-void QuickClockSeconds::onWidthChanged()
+QSGNode*
+QuickClockSeconds::createNode(
+    const QSize& aSize)
 {
-    iDirty = true;
-    QTRACE(iClock->width());
-    setWidth(iClock->width());
+    QSGNode* node = new QSGNode;
+    QSGTransformNode* txNode = new QSGTransformNode;
+    node->appendChildNode(txNode);
+    renderer()->initSecNode(txNode, aSize, window(), theme());
+    return node;
 }
 
-void QuickClockSeconds::onHeightChanged()
+void
+QuickClockSeconds::updateNode(
+    QSGNode* aNode,
+    const QSize& aSize,
+    const QTime& aTime)
 {
-    iDirty = true;
-    QTRACE(iClock->height());
-    setHeight(iClock->height());
-}
-
-void QuickClockSeconds::onVisibleChanged()
-{
-    QTRACE(iClock->isVisible());
-    setVisible(iClock->isVisible());
+    QSGTransformNode* txNode = (QSGTransformNode*)aNode->firstChild();
+    txNode->setMatrix(renderer()->secNodeMatrix(aSize, aTime));
+    CLOCK_PERFORMANCE_LOG_RECORD;
 }

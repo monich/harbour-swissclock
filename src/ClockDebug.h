@@ -41,6 +41,7 @@
 #endif // HARBOUR_DEBUG
 
 #define QTRACE(x) HDEBUG(((void*)this) << x)
+#define QVERBOSE(x) HVERBOSE(x)
 
 #ifdef CLOCK_PERFORMANCE_LOG_ENABLED
 #  include <QDateTime>
@@ -51,13 +52,14 @@ public:
         iRenderCount = 0;
         iStartTime = QDateTime::currentDateTime();
     }
-    void record(void* iOwner) {
+    void record(QObject* aOwner) {
         iRenderCount++;
         QDateTime now = QDateTime::currentDateTime();
         const int ms = iStartTime.msecsTo(now);
         if (ms >= 1000) {
             if (iRenderCount > 0) {
-                HDEBUG(iOwner << iRenderCount*1000.0/ms << "frames per second");
+                HDEBUG(aOwner->metaObject()->className() << ((void*)aOwner) <<
+                    iRenderCount*1000.0/ms << "frames per second");
                 iRenderCount = 0;
             }
             iStartTime = now;
