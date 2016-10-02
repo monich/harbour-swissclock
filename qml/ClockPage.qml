@@ -38,7 +38,6 @@ import harbour.swissclock 1.0
 Page {
     id: page
     allowedOrientations: window.allowedOrientations
-    property string clockStyle: globalClockSettings.clockStyle
     property int initialIndex: 0
     property bool ready: false
 
@@ -63,7 +62,7 @@ Page {
 
     Component.onCompleted: {
         for (var i=0; i<clockModel.length; i++) {
-            if (clockModel[i].style === clockStyle) {
+            if (clockModel[i].style === globalClockSettings.clockStyle) {
                 initialIndex += i
                 break
             }
@@ -72,12 +71,19 @@ Page {
         slideshow.model = clockModel
     }
 
-    onClockStyleChanged: {
-        if (ready) {
-            for (var i=0; i<clockModel.length; i++) {
-                if (clockModel[(i + initialIndex) % clockModel.length].style === clockStyle) {
-                    slideshow.currentIndex = i
-                    break
+    function clockAt(i) {
+        return clockModel[(i + initialIndex) % clockModel.length];
+    }
+
+    Connections {
+        target: globalClockSettings
+        onClockStyleChanged: {
+            if (ready) {
+                for (var i=0; i<clockModel.length; i++) {
+                    if (clockAt(i).style === globalClockSettings.clockStyle) {
+                        slideshow.currentIndex = i
+                        break
+                    }
                 }
             }
         }
@@ -86,159 +92,20 @@ Page {
     SlideshowView {
         id: slideshow
         anchors.fill: parent
-        delegate: Item {
-            id: clockItem
+        delegate: ClockDelegate {
             width: slideshow.itemWidth
             height: slideshow.height
-            MouseArea {
-                anchors.fill: parent
-                onClicked: globalClockSettings.showNumbers = !globalClockSettings.showNumbers
-                onPressAndHold: { / * ignore long taps * / }
-            }
-            Image {
-                anchors.fill: parent
-                source: Qt.resolvedUrl("texture.png")
-                fillMode: Image.Tile
-                Column {
-                    id: clockColumn
-                    anchors.centerIn: parent
-                    spacing: Theme.paddingSmall
-                    Label {
-                        id: label1
-                        text: "12"
-                        font.bold: true
-                        width: parent.width
-                        horizontalAlignment: Text.AlignHCenter
-                        verticalAlignment: Text.AlignVCenter
-                    }
-                    Row {
-                        spacing: Theme.paddingSmall
-                        anchors.margins: Theme.paddingSmall
-                        Label {
-                            id: label2
-                            text: "9"
-                            font.bold: true
-                            height: parent.height
-                            horizontalAlignment: Text.AlignHCenter
-                            verticalAlignment: Text.AlignVCenter
-                        }
-                        Clock {
-                            width: Math.floor(Math.ceil(clockItem.width - label2.width - label3.width - 4*Theme.paddingSmall)/2)*2
-                            height: width
-                            drawBackground: true
-                            style: clockModel[(index + initialIndex) % clockModel.length].style
-                            invertColors: globalClockSettings.invertColors
-                            renderType: globalClockSettings.renderType
-                            running: (index == slideshow.currentIndex) || slideshow.moving
-                            MouseArea {
-                                anchors.fill: parent
-                                onClicked: mouse.accepted = true
-                                onDoubleClicked: {
-                                    globalClockSettings.invertColors = !globalClockSettings.invertColors
-                                    mouse.accepted = true
-                                }
-                            }
-                        }
-                        Label {
-                            id: label3
-                            text: "3"
-                            font.bold: true
-                            height: parent.height
-                            horizontalAlignment: Text.AlignHCenter
-                            verticalAlignment: Text.AlignVCenter
-                        }
-                    }
-                    Label {
-                        id: label4
-                        text: "6"
-                        font.bold: true
-                        width: parent.width
-                        horizontalAlignment: Text.AlignHCenter
-                        verticalAlignment: Text.AlignVCenter
-                    }
-                }
-                Label {
-                    id: title
-                    text: clockModel[(index + initialIndex) % clockModel.length].title
-                    font.pixelSize: Theme.fontSizeHuge
-                    width: parent.width
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
-                    anchors {
-                        top: clockColumn.bottom
-                        bottom: parent.bottom
-                    }
-                    states: [
-                        State {
-                            name: "showTitle"
-                            when: ready && slideshow.moving
-                            PropertyChanges { target: title;  opacity: 0.7 }
-                        },
-                        State {
-                            name: "hideTitle"
-                            when: ready && !slideshow.moving
-                            PropertyChanges { target: title;  opacity: 0 }
-                        }
-                    ]
-                    transitions: [
-                        Transition {
-                            from: "hideTitle"
-                            to: "showTitle"
-                            NumberAnimation {
-                                properties: "opacity"
-                                duration: 250
-                                easing.type: Easing.InOutQuad
-                            }
-                        },
-                        Transition {
-                            from: "showTitle"
-                            to: "hideTitle"
-                            NumberAnimation {
-                                properties: "opacity"
-                                duration: 1000
-                                easing.type: Easing.InOutQuad
-                            }
-                        }
-                    ]
-                }
-            }
-            states: [
-                State {
-                    name: "showNumbers"
-                    when: ready && globalClockSettings.showNumbers && !slideshow.moving
-                    PropertyChanges { target: label1; opacity: 1 }
-                    PropertyChanges { target: label2; opacity: 1 }
-                    PropertyChanges { target: label3; opacity: 1 }
-                    PropertyChanges { target: label4; opacity: 1 }
-                },
-                State {
-                    name: "hideNumbers"
-                    when: ready && !globalClockSettings.showNumbers && !slideshow.moving
-                    PropertyChanges { target: label1; opacity: 0 }
-                    PropertyChanges { target: label2; opacity: 0 }
-                    PropertyChanges { target: label3; opacity: 0 }
-                    PropertyChanges { target: label4; opacity: 0 }
-                },
-                State {
-                    name: "flicking"
-                    when: ready && slideshow.moving
-                    PropertyChanges { target: label1; opacity: 0 }
-                    PropertyChanges { target: label2; opacity: 0 }
-                    PropertyChanges { target: label3; opacity: 0 }
-                    PropertyChanges { target: label4; opacity: 0 }
-                }
-            ]
-            transitions: [
-                Transition { from: "flicking"; to: "*"; animations: [ numbersAnimation ] },
-                Transition { from: "hideNumbers"; to: "showNumbers"; animations: [ numbersAnimation ] },
-                Transition { from: "showNumbers"; to: "hideNumbers"; animations: [ numbersAnimation ] }
-            ]
-            NumberAnimation {
-                id: numbersAnimation
-                properties: "opacity"
-                easing.type: Easing.InOutQuad
+            style: clockAt(index).style
+            title: clockAt(index).title
+            settings: globalClockSettings
+            flicking: slideshow.moving
+            selected: index == slideshow.currentIndex
+
+        }
+        onCurrentIndexChanged: {
+            if (ready) {
+                globalClockSettings.clockStyle = clockAt(currentIndex).style
             }
         }
-        onCurrentIndexChanged: globalClockSettings.clockStyle = clockModel[(currentIndex + initialIndex) % clockModel.length].style
     }
 }
