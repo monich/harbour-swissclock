@@ -37,7 +37,6 @@ import harbour.swissclock 1.0
 
 CoverBackground {
     allowResize: true
-    onWidthChanged: console.log(Theme.coverSizeLarge.width, width)
     Clock {
         id: clock
         drawBackground: false
