@@ -42,6 +42,7 @@
 #define DEFAULT_INVERT_COLORS       false
 #define DEFAULT_CLOCK_STYLE         ClockRenderer::SWISS_RAILROAD
 #define DEFAULT_RENDER_TYPE         ClockSettings::RenderAuto
+#define DEFAULT_ORIENTATION         ClockSettings::OrientationPrimary
 
 class MGConfItem;
 
@@ -49,6 +50,7 @@ class ClockSettings : public QObject
 {
     Q_OBJECT
     Q_ENUMS(RenderType)
+    Q_ENUMS(Orientation)
     Q_PROPERTY(bool showNumbers
                READ showNumbers
                WRITE setShowNumbers
@@ -64,12 +66,24 @@ class ClockSettings : public QObject
     Q_PROPERTY(int renderType
                READ renderType
                NOTIFY renderTypeChanged)
+    Q_PROPERTY(int orientation
+               READ orientation
+               NOTIFY orientationChanged)
 
 public:
     enum RenderType {
         RenderAuto,
         RenderSpeed,
         RenderQuality
+    };
+
+    enum Orientation {
+        OrientationPrimary,
+        OrientationPortrait,
+        OrientationPortraitAny,
+        OrientationLandscape,
+        OrientationLandscapeAny,
+        OrientationAny
     };
 
     explicit ClockSettings(QObject* aParent = NULL);
@@ -79,23 +93,25 @@ public:
     bool invertColors() const;
     QString clockStyle() const;
     RenderType renderType() const;
+    Orientation orientation() const;
 
     void setShowNumbers(bool aValue);
     void setInvertColors(bool aValue);
     void setClockStyle(QString aValue);
-    void setRenderType(RenderType aValue);
 
 signals:
     void showNumbersChanged();
     void invertColorsChanged();
     void clockStyleChanged();
     void renderTypeChanged();
+    void orientationChanged();
 
 private:
     MGConfItem* iShowNumbers;
     MGConfItem* iInvertColors;
     MGConfItem* iClockStyle;
     MGConfItem* iRenderType;
+    MGConfItem* iOrientation;
 };
 
 QML_DECLARE_TYPE(ClockSettings)

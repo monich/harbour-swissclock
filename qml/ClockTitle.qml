@@ -33,22 +33,56 @@
 
 import QtQuick 2.0
 import Sailfish.Silica 1.0
-import harbour.swissclock 1.0
 
-ApplicationWindow {
-    id: window
-    allowedOrientations: {
-        switch (globalClockSettings.orientation) {
-        case ClockSettings.OrientationPortrait: return Orientation.Portrait
-        case ClockSettings.OrientationPortraitAny: return Orientation.PortraitMask
-        case ClockSettings.OrientationLandscape: return Orientation.Landscape
-        case ClockSettings.OrientationLandscapeAny: return Orientation.LandscapeMask
-        case ClockSettings.OrientationAny: return Orientation.All
-        default: return (Screen.sizeCategory !== undefined && Screen.sizeCategory >= Screen.Large) ?
-                    Orientation.Landscape : Orientation.Portrait
-        }
+Rectangle {
+    id: title
+    property alias text: label.text
+    property bool shown
+    property alias background: title.color
+    color: "transparent"
+    radius: Theme.paddingMedium
+    implicitWidth: label.implicitWidth + Theme.paddingLarge
+    implicitHeight: label.implicitHeight + Theme.paddingLarge
+
+    Label {
+        id: label
+        font.pixelSize: Theme.fontSizeHuge
+        anchors.centerIn: parent
+        horizontalAlignment: Text.AlignHCenter
+        verticalAlignment: Text.AlignVCenter
     }
-    initialPage: Component { ClockPage {} }
-    cover: Component { ClockCover {} }
-    ClockSettings { id: globalClockSettings }
+
+    states: [
+        State {
+            name: "showTitle"
+            when: shown
+            PropertyChanges { target: title;  opacity: 0.7 }
+        },
+        State {
+            name: "hideTitle"
+            when: !shown
+            PropertyChanges { target: title;  opacity: 0 }
+        }
+    ]
+
+    transitions: [
+        Transition {
+            from: "hideTitle"
+            to: "showTitle"
+            NumberAnimation {
+                properties: "opacity"
+                duration: 250
+                easing.type: Easing.InOutQuad
+            }
+        },
+        Transition {
+            from: "showTitle"
+            to: "hideTitle"
+            NumberAnimation {
+                properties: "opacity"
+                duration: 1000
+                easing.type: Easing.InOutQuad
+            }
+        }
+    ]
 }

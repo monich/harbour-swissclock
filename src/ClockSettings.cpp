@@ -43,6 +43,7 @@
 #define KEY_INVERT_COLORS       "invertColors"
 #define KEY_CLOCK_STYLE         "clockStyle"
 #define KEY_RENDER_TYPE         "renderType"
+#define KEY_ORIENTATION         "orientation"
 
 #define SETTINGS_SHOW_NUMBERS   SETTINGS_GROUP KEY_SHOW_NUMBERS
 #define SETTINGS_INVERT_COLORS  SETTINGS_GROUP KEY_INVERT_COLORS
@@ -52,12 +53,14 @@ ClockSettings::ClockSettings(QObject* aParent) :
     iShowNumbers(new MGConfItem(DCONF_PATH KEY_SHOW_NUMBERS, this)),
     iInvertColors(new MGConfItem(DCONF_PATH KEY_INVERT_COLORS, this)),
     iClockStyle(new MGConfItem(DCONF_PATH KEY_CLOCK_STYLE, this)),
-    iRenderType(new MGConfItem(DCONF_PATH KEY_RENDER_TYPE, this))
+    iRenderType(new MGConfItem(DCONF_PATH KEY_RENDER_TYPE, this)),
+    iOrientation(new MGConfItem(DCONF_PATH KEY_ORIENTATION, this))
 {
     QTRACE("- created");
 
     // Pull in settings from the .ini file
     QSettings settings;
+
     if (settings.contains(SETTINGS_SHOW_NUMBERS)) {
         bool value = settings.value(SETTINGS_SHOW_NUMBERS).toBool();
         QTRACE("- importing " SETTINGS_SHOW_NUMBERS ":" << value);
@@ -75,6 +78,7 @@ ClockSettings::ClockSettings(QObject* aParent) :
     connect(iInvertColors, SIGNAL(valueChanged()), SIGNAL(invertColorsChanged()));
     connect(iClockStyle, SIGNAL(valueChanged()), SIGNAL(clockStyleChanged()));
     connect(iRenderType, SIGNAL(valueChanged()), SIGNAL(renderTypeChanged()));
+    connect(iOrientation, SIGNAL(valueChanged()), SIGNAL(orientationChanged()));
 }
 
 ClockSettings::~ClockSettings()
@@ -112,6 +116,24 @@ ClockSettings::RenderType ClockSettings::renderType() const
     return DEFAULT_RENDER_TYPE;
 }
 
+ClockSettings::Orientation ClockSettings::orientation() const
+{
+    // Need to cast int to enum right away to force "enumeration value not
+    // handled in switch" warning if we miss one of the Orientation:
+    ClockSettings::Orientation value = (ClockSettings::Orientation)
+        iOrientation->value(DEFAULT_ORIENTATION).toInt();
+    switch (value) {
+    case OrientationPrimary:
+    case OrientationPortrait:
+    case OrientationPortraitAny:
+    case OrientationLandscape:
+    case OrientationLandscapeAny:
+    case OrientationAny:
+        return value;
+    }
+    return DEFAULT_ORIENTATION;
+}
+
 void ClockSettings::setShowNumbers(bool aValue)
 {
     QTRACE("-" << KEY_SHOW_NUMBERS << "=" << aValue);
@@ -128,10 +150,4 @@ void ClockSettings::setClockStyle(QString aValue)
 {
     QTRACE("-" << KEY_CLOCK_STYLE << "=" << aValue);
     iClockStyle->set(aValue);
-}
-
-void ClockSettings::setRenderType(ClockSettings::RenderType aValue)
-{
-    QTRACE("-" << KEY_RENDER_TYPE << "=" << aValue);
-    iRenderType->set(aValue);
 }

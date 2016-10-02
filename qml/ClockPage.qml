@@ -60,6 +60,10 @@ Page {
         }
     ]
 
+    function clockAt(i) {
+        return clockModel[(i + initialIndex) % clockModel.length];
+    }
+
     Component.onCompleted: {
         for (var i=0; i<clockModel.length; i++) {
             if (clockModel[i].style === globalClockSettings.clockStyle) {
@@ -69,10 +73,14 @@ Page {
         }
         ready = true
         slideshow.model = clockModel
+        orientationReminder.restart()
     }
 
-    function clockAt(i) {
-        return clockModel[(i + initialIndex) % clockModel.length];
+    onOrientationChanged: orientationReminder.restart()
+
+    Timer {
+        id: orientationReminder
+        interval: 250
     }
 
     Connections {
@@ -100,7 +108,8 @@ Page {
             settings: globalClockSettings
             flicking: slideshow.moving
             selected: index == slideshow.currentIndex
-
+            landscape: page.isLandscape
+            peekNumbers: orientationReminder.running
         }
         onCurrentIndexChanged: {
             if (ready) {
