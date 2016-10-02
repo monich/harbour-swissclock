@@ -46,7 +46,6 @@ OTHER_FILES += \
     icons/harbour-$${NAME}.svg \
     harbour-$${NAME}.desktop \
     translations/*.ts \
-    rpm/harbour-$${NAME}.changes \
     rpm/harbour-$${NAME}.spec
 
 # Icons

@@ -1,9 +1,10 @@
 Name:       harbour-swissclock
 Summary:    Swiss Clock
-Version:    1.0.4
+Version:    1.0.5
 Release:    1
 Group:      Applications/Productivity
 License:    BSD
+Vendor:     meego
 URL:        https://github.com/monich/harbour-swissclock
 Source0:    %{name}-%{version}.tar.bz2
 
@@ -48,6 +49,15 @@ desktop-file-install --delete-original \
 %{_datadir}/icons/hicolor/*/apps/%{name}.png
 
 %changelog
+* Sun Oct 02 2016 Slava Monich <slava.monich@jolla.com> 1.0.5
+- Vectorized some rendering, now it's usable on hires devices
+
+* Sun May 03 2015 Slava Monich <slava.monich@jolla.com> 1.0.4
+- Added Deutsche Bahn clock
+
+* Sun Jan 04 2015 Slava Monich <slava.monich@jolla.com> 1.0.3
+- Rendering optimization
+
 * Sun Oct 26 2014 Slava Monich <slava.monich@jolla.com> 1.0.2
 - Store settings in dconf
 - Fixed a problem with the minute hand being a bit too blurry
