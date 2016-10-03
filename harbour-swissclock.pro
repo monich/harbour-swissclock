@@ -1,11 +1,24 @@
+openrepos {
+    PREFIX = openrepos
+    DEFINES += OPENREPOS
+} else {
+    PREFIX = harbour
+}
+
 NAME = swissclock
-PREFIX = harbour
 TARGET = $${PREFIX}-$${NAME}
 CONFIG += sailfishapp
 CONFIG += link_pkgconfig
 PKGCONFIG += mlite5 sailfishapp
 QMAKE_CXXFLAGS += -Wno-unused-parameter -Wno-psabi
 QT += dbus
+
+app_settings {
+    # This path is hardcoded in jolla-settings
+    TRANSLATIONS_PATH = /usr/share/translations
+} else {
+    TRANSLATIONS_PATH = /usr/share/$${TARGET}/translations
+}
 
 CONFIG(debug, debug|release) {
   QMAKE_CXXFLAGS += -g -O0
@@ -43,10 +56,12 @@ HEADERS += \
 
 OTHER_FILES += \
     qml/*.qml \
+    settings/*.qml \
+    settings/harbour-$${NAME}.json \
     icons/harbour-$${NAME}.svg \
     harbour-$${NAME}.desktop \
     translations/*.ts \
-    rpm/harbour-$${NAME}.spec
+    rpm/*-$${NAME}.spec
 
 # Icons
 ICON_SIZES = 86 108 128 256
@@ -62,9 +77,29 @@ for(s, ICON_SIZES) {
     INSTALLS += $${icon_target}
 }
 
+# Settings
+app_settings {
+    settings_json.files = settings/$${TARGET}.json
+    settings_json.path = /usr/share/jolla-settings/entries/
+    equals(PREFIX, "openrepos") {
+        settings_json.extra = sed s/harbour/openrepos/g settings/harbour-$${NAME}.json > $$eval(settings_json.files)
+        settings_json.CONFIG += no_check_exist
+    }
+    settings_qml.files = settings/*.qml
+    settings_qml.path = /usr/share/$${TARGET}/settings/
+    INSTALLS += settings_qml settings_json
+}
+
+# Desktop file
+equals(PREFIX, "openrepos") {
+    desktop.extra = sed s/harbour/openrepos/g harbour-$${NAME}.desktop > $${TARGET}.desktop
+    desktop.CONFIG += no_check_exist
+}
+
 # Translations
-TRANSLATIONS_PATH = /usr/share/$${TARGET}/translations
-TRANSLATION_SOURCES = $${_PRO_FILE_PWD_}/qml
+TRANSLATION_SOURCES = \
+  $${_PRO_FILE_PWD_}/qml \
+  $${_PRO_FILE_PWD_}/settings
 
 defineTest(addTrFile) {
     in = $${_PRO_FILE_PWD_}/translations/harbour-$$1

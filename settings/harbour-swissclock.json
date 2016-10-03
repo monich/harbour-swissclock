@@ -1,0 +1,14 @@
+{
+    "translation_catalog" : "harbour-swissclock",
+    "entries": [
+        {
+            "path": "applications/harbour-swissclock.desktop",
+            "title": "Swiss Clock",
+            "type": "page",
+            "icon": "harbour-swissclock",
+            "params": {
+                "source": "/usr/share/harbour-swissclock/settings/settings.qml"
+            }
+        }
+    ]
+}

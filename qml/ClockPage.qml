@@ -46,17 +46,17 @@ Page {
             style: "SwissRailroad",
             //: Label for Swiss raiload clock style
             //% "Swiss railroad"
-            title: qsTrId("swiss-clock-title")
+            title: qsTrId("swissclock-title-swiss_railroad")
         },{
             style: "HelsinkiMetro",
             //: Label for Helsinki metro clock style
             //% "Helsinki metro"
-            title: qsTrId("helsinki-clock-title")
+            title: qsTrId("swissclock-title-helsinki_metro")
         },{
             style: "DeutscheBahn",
             //: Label for Deutsche Bahn clock style
             //% "Deutsche Bahn"
-            title: qsTrId("deutschebahn-clock-title")
+            title: qsTrId("swissclock-title-deutsche_bahn")
         }
     ]
 

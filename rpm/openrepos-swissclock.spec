@@ -1,10 +1,10 @@
-Name:       harbour-swissclock
+Name:       openrepos-swissclock
 Summary:    Fancy Clock
 Version:    1.0.5
 Release:    1
 Group:      Applications/Productivity
 License:    BSD
-Vendor:     meego
+Vendor:     slava
 URL:        https://github.com/monich/harbour-swissclock
 Source0:    %{name}-%{version}.tar.bz2
 
@@ -30,7 +30,7 @@ Fancy clock for Sailfish OS
 %setup -q -n %{name}-%{version}
 
 %build
-%qtc_qmake5
+%qtc_qmake5 CONFIG+=openrepos CONFIG+=app_settings
 %qtc_make %{?_smp_mflags}
 
 %install
@@ -44,9 +44,12 @@ desktop-file-install --delete-original \
 %files
 %defattr(-,root,root,-)
 %{_bindir}/%{name}
-%{_datadir}/%{name}
+%{_datadir}/%{name}/qml
+%{_datadir}/%{name}/settings
 %{_datadir}/applications/%{name}.desktop
 %{_datadir}/icons/hicolor/*/apps/%{name}.png
+%{_datadir}/translations/%{name}*.qm
+%{_datadir}/jolla-settings/entries/%{name}.json
 
 %changelog
 * Sun Oct 02 2016 Slava Monich <slava.monich@jolla.com> 1.0.5

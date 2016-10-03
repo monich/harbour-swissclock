@@ -38,6 +38,12 @@
 
 #include "ClockRenderer.h"
 
+#ifdef OPENREPOS
+#  define CLOCK_APP_NAME            "openrepos-swissclock"
+#else
+#  define CLOCK_APP_NAME            "harbour-swissclock"
+#endif
+
 #define DEFAULT_SHOW_NUMBERS        false
 #define DEFAULT_INVERT_COLORS       false
 #define DEFAULT_CLOCK_STYLE         ClockRenderer::SWISS_RAILROAD

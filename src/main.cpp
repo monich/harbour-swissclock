@@ -50,10 +50,15 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
     int result = 0;
     QGuiApplication* app = SailfishApp::application(argc, argv);
 
+    // Load translations
     QLocale locale;
     QTranslator* translator = new QTranslator(app);
+#ifdef OPENREPOS
+    QString transDir("/usr/share/translations");
+#else
     QString transDir = SailfishApp::pathTo("translations").toLocalFile();
-    QString transFile("harbour-swissclock");
+#endif
+    QString transFile(CLOCK_APP_NAME);
     if (translator->load(locale, transFile, "-", transDir) ||
         translator->load(transFile, transDir)) {
         app->installTranslator(translator);
