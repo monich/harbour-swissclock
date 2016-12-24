@@ -52,6 +52,7 @@ Page {
 
     Component.onCompleted: {
         orientation.updateControls()
+        invertColors.updateControls()
     }
 
     SilicaFlickable {
@@ -66,6 +67,59 @@ Page {
                 //: Settings page header
                 //% "Swiss Clock"
                 title: qsTrId("swissclock-settings-page_header")
+            }
+
+            ComboBox {
+                id: invertColorsComboBox
+                //: Combo box label
+                //% "Dial plate"
+                label: qsTrId("swissclock-settings-dial_plate")
+                //: Combo box description
+                //% "You can also switch between light and dark backgrounds by double-tapping the dial plate"
+                description: qsTrId("swissclock-settings-dial_plate-description")
+                menu: ContextMenu {
+                    id: invertColorsMenu
+                    readonly property int defaultIndex: 0
+                    MenuItem {
+                        //: Combo box value for the normal (light) dial plate
+                        //% "Light"
+                        text: qsTrId("swissclock-settings-dial_plate-value-light")
+                        readonly property int index: 0
+                        readonly property bool value: false
+                        readonly property bool isMenuItem: true
+                    }
+                    MenuItem {
+                        //: Combo box value for inverted (dark) dial plate
+                        //% "Dark"
+                        text: qsTrId("swissclock-settings-dial_plate-value-dark")
+                        readonly property int index: 1
+                        readonly property bool value: true
+                        readonly property bool isMenuItem: true
+                    }
+                }
+                onCurrentItemChanged: invertColors.updateValue()
+                ConfigurationValue {
+                    id: invertColors
+                    key: rootPath + "invertColors"
+                    defaultValue: false
+                    onValueChanged: updateControls()
+                    function updateValue() {
+                        var item = invertColorsComboBox.currentItem
+                        if (item) value = item.value
+                    }
+                    function updateControls() {
+                        var n = invertColorsMenu.children.length
+                        var index = invertColorsMenu.defaultIndex
+                        for (var i=0; i<n; i++) {
+                            var item = invertColorsMenu.children[i]
+                            if (item.isMenuItem && value == item.value) {
+                                index = item.index
+                                break
+                            }
+                        }
+                        invertColorsComboBox.currentIndex = index
+                    }
+                }
             }
 
             ComboBox {

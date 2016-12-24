@@ -23,6 +23,26 @@
         <extracomment>Settings page header</extracomment>
         <translation>Swiss Clock</translation>
     </message>
+    <message id="swissclock-settings-dial_plate">
+        <source>Dial plate</source>
+        <extracomment>Combo box label</extracomment>
+        <translation>Циферблат</translation>
+    </message>
+    <message id="swissclock-settings-dial_plate-description">
+        <source>You can also switch between light and dark backgrounds by double-tapping the dial plate</source>
+        <extracomment>Combo box description</extracomment>
+        <translation>Фон можно переключить и не заходя в настройки. Достаточно стукнуть два раза по циферблату</translation>
+    </message>
+    <message id="swissclock-settings-dial_plate-value-light">
+        <source>Light</source>
+        <extracomment>Combo box value for the normal (light) dial plate</extracomment>
+        <translation>Светлый</translation>
+    </message>
+    <message id="swissclock-settings-dial_plate-value-dark">
+        <source>Dark</source>
+        <extracomment>Combo box value for inverted (dark) dial plate</extracomment>
+        <translation>Тёмный</translation>
+    </message>
     <message id="swissclock-settings-orientation_label">
         <source>Orientation</source>
         <extracomment>Combo box label</extracomment>
