@@ -135,33 +135,41 @@ Page {
                         //: Combo box value for primary orientation
                         //% "Primary"
                         text: qsTrId("swissclock-settings-orientation-primary")
+                        readonly property int index: 0
                         readonly property int primary: 0
                         readonly property int inverted: primary
                         readonly property bool canInvert: false
+                        readonly property bool isMenuItem: true
                     }
                     MenuItem {
                         //: Combo box value for portrait orientation
                         //% "Portrait"
                         text: qsTrId("swissclock-settings-orientation-portrait")
+                        readonly property int index: 1
                         readonly property int primary: 1
                         readonly property int inverted: 2
                         readonly property bool canInvert: true
+                        readonly property bool isMenuItem: true
                     }
                     MenuItem {
                         //: Combo box value for landscape orientation
                         //% "Landscape"
                         text: qsTrId("swissclock-settings-orientation-landscape")
+                        readonly property int index: 2
                         readonly property int primary: 3
                         readonly property int inverted: 4
                         readonly property bool canInvert: true
+                        readonly property bool isMenuItem: true
                     }
                     MenuItem {
                         //: Combo box value for dynamic orientation
                         //% "Dynamic"
                         text: qsTrId("swissclock-settings-orientation-dynamic")
+                        readonly property int index: 3
                         readonly property int primary: 5
                         readonly property int inverted: primary
                         readonly property bool canInvert: true
+                        readonly property bool isMenuItem: true
                     }
                 }
                 onCurrentItemChanged: orientation.updateValue()
@@ -192,8 +200,8 @@ Page {
                     var index = orientationMenu.defaultIndex
                     for (var i=0; i<n; i++) {
                         var item = orientationMenu.children[i]
-                        if (value === item.primary || value === item.inverted) {
-                            index = i
+                        if (item.isMenuItem && (value === item.primary || value === item.inverted)) {
+                            index = item.index
                             break
                         }
                     }
@@ -201,7 +209,7 @@ Page {
                     var currentItem = orientationComboBox.currentItem
                     if (currentItem) {
                         if (currentItem.primary === currentItem.inverted) {
-                            orientationInvertSwitch.checked = item.canInvert
+                            orientationInvertSwitch.checked = currentItem.canInvert
                             orientationInvertSwitch.enabled = false
                         } else {
                             orientationInvertSwitch.checked = (value === currentItem.inverted)
