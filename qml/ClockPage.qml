@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2014-2016 Jolla Ltd.
- * Contact: Slava Monich <slava.monich@jolla.com>
+ * Copyright (C) 2014-2017 Jolla Ltd.
+ * Copyright (C) 2014-2017 Slava Monich <slava.monich@jolla.com>
  *
  * You may use this file under the terms of the BSD license as follows:
  *
@@ -40,6 +40,7 @@ Page {
     allowedOrientations: window.allowedOrientations
     property int initialIndex: 0
     property bool ready: false
+    property var settings: globalClockSettings
 
     readonly property var clockModel: [
         {
@@ -66,13 +67,14 @@ Page {
 
     Component.onCompleted: {
         for (var i=0; i<clockModel.length; i++) {
-            if (clockModel[i].style === globalClockSettings.clockStyle) {
+            if (clockModel[i].style === settings.clockStyle) {
                 initialIndex += i
                 break
             }
         }
         ready = true
         slideshow.model = clockModel
+        slideshow.forceActiveFocus()
         orientationReminder.restart()
     }
 
@@ -84,11 +86,11 @@ Page {
     }
 
     Connections {
-        target: globalClockSettings
+        target: settings
         onClockStyleChanged: {
             if (ready) {
                 for (var i=0; i<clockModel.length; i++) {
-                    if (clockAt(i).style === globalClockSettings.clockStyle) {
+                    if (clockAt(i).style === settings.clockStyle) {
                         slideshow.currentIndex = i
                         break
                     }
@@ -105,7 +107,7 @@ Page {
             height: slideshow.height
             style: clockAt(index).style
             title: clockAt(index).title
-            settings: globalClockSettings
+            settings: page.settings
             flicking: slideshow.moving
             selected: index == slideshow.currentIndex
             landscape: page.isLandscape
@@ -113,8 +115,21 @@ Page {
         }
         onCurrentIndexChanged: {
             if (ready) {
-                globalClockSettings.clockStyle = clockAt(currentIndex).style
+                settings.clockStyle = clockAt(currentIndex).style
             }
+        }
+        Keys.onSelectPressed: {
+            if (doubleClickTimer.running) {
+                doubleClickTimer.stop()     // Double click
+                settings.invertColors = !settings.invertColors
+            } else {
+                doubleClickTimer.start()    // Don't know yet
+            }
+        }
+        Timer {
+            id: doubleClickTimer
+            interval: 500
+            onTriggered: settings.showNumbers = !settings.showNumbers // Single click
         }
     }
 }
