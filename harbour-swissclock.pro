@@ -49,10 +49,12 @@ HARBOUR_SRC = $${HARBOUR_LIB}/src
 HARBOUR_INCLUDE = $${HARBOUR_LIB}/include
 INCLUDEPATH += $${HARBOUR_INCLUDE}
 SOURCES += \
-  $${HARBOUR_SRC}/HarbourSystemState.cpp
+    $${HARBOUR_SRC}/HarbourMce.cpp \
+    $${HARBOUR_SRC}/HarbourSystemState.cpp
 HEADERS += \
     $${HARBOUR_INCLUDE}/HarbourDebug.h \
-    $${HARBOUR_INCLUDE}/HarbourSystemState.h
+    $${HARBOUR_INCLUDE}/HarbourSystemState.h \
+    $${HARBOUR_SRC}/HarbourMce.h
 
 OTHER_FILES += \
     qml/*.qml \
