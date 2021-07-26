@@ -1,6 +1,6 @@
 Name:       openrepos-swissclock
 Summary:    Fancy Clock
-Version:    1.0.7
+Version:    1.0.8
 Release:    1
 Group:      Applications/Productivity
 License:    BSD
@@ -52,6 +52,11 @@ desktop-file-install --delete-original \
 %{_datadir}/jolla-settings/entries/%{name}.json
 
 %changelog
+* Tue Jul 27 2021 Slava Monich <slava.monich@jolla.com> 1.0.8
+- Added Hungarian translation
+- Added Dutch translation
+- Fixed aarch64 build
+
 * Sat Dec 24 2016 Slava Monich <slava.monich@jolla.com> 1.0.7
 - Added settings option for dial plate background
 

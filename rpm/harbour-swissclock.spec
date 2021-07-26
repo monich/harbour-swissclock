@@ -1,6 +1,6 @@
 Name:       harbour-swissclock
 Summary:    Fancy Clock
-Version:    1.0.6
+Version:    1.0.8
 Release:    1
 Group:      Applications/Productivity
 License:    BSD
@@ -49,6 +49,11 @@ desktop-file-install --delete-original \
 %{_datadir}/icons/hicolor/*/apps/%{name}.png
 
 %changelog
+* Tue Jul 27 2021 Slava Monich <slava.monich@jolla.com> 1.0.8
+- Added Hungarian translation
+- Added Dutch translation
+- Fixed aarch64 build
+
 * Tue Oct 04 2016 Slava Monich <slava.monich@jolla.com> 1.0.6
 - Added support for landscape and made it default on tablet
 
