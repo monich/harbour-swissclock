@@ -5,3 +5,6 @@ Name=Swiss Clock
 #Name[ru]=Часики
 Icon=harbour-swissclock
 Exec=harbour-swissclock
+
+[X-HarbourBackup]
+BackupConfigList=/apps/harbour-swissclock/
