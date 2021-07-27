@@ -105,12 +105,11 @@ TRANSLATION_SOURCES = \
   $${_PRO_FILE_PWD_}/settings
 
 defineTest(addTrFile) {
-    rel = translations/$${1}
-    OTHER_FILES += $${rel}.ts
-    export(OTHER_FILES)
+    in = $${_PRO_FILE_PWD_}/translations/harbour-$$1
+    out = $${OUT_PWD}/translations/$${PREFIX}-$$1
 
-    in = $${_PRO_FILE_PWD_}/$$rel
-    out = $${OUT_PWD}/$$rel
+    OTHER_FILES += translations/harbour-$${1}.ts
+    export(OTHER_FILES)
 
     s = $$replace(1,-,_)
     lupdate_target = lupdate_$$s
@@ -138,9 +137,9 @@ defineTest(addTrFile) {
 
 LANGUAGES = hu nl ru sv
 
-addTrFile($${TARGET})
+addTrFile($${NAME})
 for(l, LANGUAGES) {
-    addTrFile($${TARGET}-$$l)
+    addTrFile($${NAME}-$$l)
 }
 
 qm.path = $$TRANSLATIONS_PATH
