@@ -209,7 +209,13 @@ SwissRailroad::paintSecHand(
     aPainter->setPen(Qt::NoPen);
     aPainter->setBrush(iSecondHandBrush);
     aPainter->translate(w/2, h/2);
-    aPainter->rotate(6.0 * (aTime.second() + aTime.msec()/1000.0) - 90);
+    // Swiss Railway clock stopping:
+    qreal hilfiker = 58.5;
+    if ((aTime.second() + aTime.msec()/1000.0) >= hilfiker ) {
+        aPainter->rotate(-90); // wait at 0 a.k.a. 60 a.k.a. 90
+    } else { // speed up seconds hand
+        aPainter->rotate(6.0 * (aTime.second() + aTime.msec()/1000.0)*60.0/hilfiker - 90);
+    }
     aPainter->fillRect(secHandRect, iSecondHandBrush);
     aPainter->drawEllipse(center, rs1, rs1);
     aPainter->drawEllipse(QPointF(xs2,0), rs2, rs2);
