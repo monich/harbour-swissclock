@@ -6,5 +6,8 @@ Name=Swiss Clock
 Icon=harbour-swissclock
 Exec=harbour-swissclock
 
+[X-Sailjail]
+Permissions=
+
 [X-HarbourBackup]
 BackupConfigList=/apps/harbour-swissclock/
