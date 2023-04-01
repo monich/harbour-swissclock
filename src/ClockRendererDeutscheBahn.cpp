@@ -1,6 +1,6 @@
 /*
+ * Copyright (C) 2014-2023 Slava Monich <slava@monich.com>
  * Copyright (C) 2014-2016 Jolla Ltd.
- * Contact: Slava Monich <slava.monich@jolla.com>
  *
  * You may use this file under the terms of the BSD license as follows:
  *
@@ -8,15 +8,15 @@
  * modification, are permitted provided that the following conditions
  * are met:
  *
- *   - Redistributions of source code must retain the above copyright
- *     notice, this list of conditions and the following disclaimer.
- *   - Redistributions in binary form must reproduce the above copyright
- *     notice, this list of conditions and the following disclaimer in
- *     the documentation and/or other materials provided with the
- *     distribution.
- *   - Neither the name of Jolla Ltd nor the names of its contributors
- *     may be used to endorse or promote products derived from this
- *     software without specific prior written permission.
+ *   1. Redistributions of source code must retain the above copyright
+ *      notice, this list of conditions and the following disclaimer.
+ *   2. Redistributions in binary form must reproduce the above copyright
+ *      notice, this list of conditions and the following disclaimer in
+ *      the documentation and/or other materials provided with the
+ *      distribution.
+ *   3. Neither the names of the copyright holders nor the names of its
+ *      contributors may be used to endorse or promote products derived
+ *      from this software without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
@@ -41,28 +41,26 @@ const QString ClockRenderer::DEUTSCHE_BAHN("DeutscheBahn");
 class DeutscheBahn : public ClockRenderer
 {
 public:
-    virtual void paintDialPlate(QPainter* aPainter, const QSize& aSize,
-        ClockTheme* aTheme, bool aDrawBackground);
-    virtual void paintHourMinHands(QPainter* aPainter, const QSize& aSize,
-        const QTime& aTime, ClockTheme* aTheme);
-    virtual void paintSecHand(QPainter* aPainter, const QSize& aSize,
-        const QTime& aTime, ClockTheme* aTheme);
-    virtual void initNode(QSGTransformNode* aTxNode, NodeType aType,
-        QQuickWindow* aWindow, const QSizeF& aSize, ClockTheme* aTheme);
+    void paintDialPlate(QPainter*, const QSize&, ClockTheme* aTheme,
+        bool aDrawBackground) Q_DECL_OVERRIDE;
+    void paintHourMinHands(QPainter* aPainter, const QSize& aSize,
+        const QTime& aTime, ClockTheme* aTheme) Q_DECL_OVERRIDE;
+    void paintSecHand(QPainter* aPainter, const QSize& aSize,
+        const QTime& aTime, ClockTheme* aTheme) Q_DECL_OVERRIDE;
+    void initNode(QSGTransformNode* aTxNode, NodeType aType,
+        QQuickWindow* aWindow, const QSizeF& aSize,
+        ClockTheme* aTheme) Q_DECL_OVERRIDE;
 
-    void initHour(QSGTransformNode* aTxNode, const QSizeF& aSize,
-        ClockTheme* aTheme);
-    void initMin(QSGTransformNode* aTxNode, const QSizeF& aSize,
-        ClockTheme* aTheme);
-    void initSec(QSGTransformNode* aTxNode, const QSizeF& aSize,
-        ClockTheme* aTheme);
+    void initHour(QSGTransformNode*, const QSizeF&, ClockTheme*);
+    void initMin(QSGTransformNode*, const QSizeF&, ClockTheme*);
+    void initSec(QSGTransformNode*, const QSizeF&, ClockTheme*);
     static void paintHand(QPainter* aPainter, const QRectF& aRect,
         qreal aAngle, const QBrush& aBrush, qreal aX = 0.0, qreal aY = 0.0);
 
     DeutscheBahn() : ClockRenderer(DEUTSCHE_BAHN),
         iSecondHandColor(255,32,32) {}
 
-    QColor iSecondHandColor;
+    const QColor iSecondHandColor;
 };
 
 ClockRenderer*
