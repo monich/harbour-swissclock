@@ -79,16 +79,13 @@ ClockRenderer::msecUntilNextUpdate(
     }
 }
 
-QMatrix4x4
-ClockRenderer::nodeMatrix(
+qreal
+ClockRenderer::nodeAngle(
     NodeType aType,
-    const QSize& aSize,
     const QTime& aTime)
 {
-    qreal a;
-
     if (aType == NodeSec) {
-        a = 6 * (aTime.second() + aTime.msec()/1000.0) - 90;
+        return 6 * (aTime.second() + aTime.msec()/1000.0);
     } else {
         QTime t;
         if (aTime.second() == 0) {
@@ -98,16 +95,23 @@ ClockRenderer::nodeMatrix(
             t = QTime(aTime.hour(), aTime.minute(), 0);
         }
         if (aType == NodeHour) {
-            a = 30*(t.hour() + (t.minute() + t.second()/60.0)/60) - 90;
+            return 30*(t.hour() + (t.minute() + t.second()/60.0)/60);
         } else {
-            a = 6*(t.minute() + (t.second() + t.msec()/1000.0)/60) - 90;
+            return 6*(t.minute() + (t.second() + t.msec()/1000.0)/60);
         }
     }
+}
 
+QMatrix4x4
+ClockRenderer::nodeMatrix(
+    NodeType aType,
+    const QSize& aSize,
+    const QTime& aTime)
+{
     qreal dx = aSize.width()/2;
     qreal dy = aSize.height()/2;
     return QMatrix4x4(QTransform::fromTranslate(dx, dy).
-        rotate(a).translate(-dx, -dy));
+        rotate(nodeAngle(aType, aTime) - 90).translate(-dx, -dy));
 }
 
 QSGGeometry*

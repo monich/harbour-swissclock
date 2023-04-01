@@ -63,6 +63,9 @@ public:
 
     virtual ~ClockRenderer();
 
+    // Hand angle (in degrees, starting from top of the clock)
+    virtual qreal nodeAngle(NodeType, const QTime&);
+
     // Raster interface
     virtual void paintDialPlate(QPainter* aPainter, const QSize& aSize,
         ClockTheme* aTheme, bool aDrawBackground) = 0;
@@ -72,13 +75,13 @@ public:
         const QTime& aTime, ClockTheme* aTheme) = 0;
 
     // Optimized interface
-    virtual int msecUntilNextUpdate(NodeType aType, const QTime& aTime);
     virtual void initNode(QSGTransformNode* aTxNode, NodeType aType,
         QQuickWindow* aWindow, const QSizeF& aSize, ClockTheme* aTheme) = 0;
-    virtual QMatrix4x4 nodeMatrix(NodeType aType, const QSize& aSize,
+    int msecUntilNextUpdate(NodeType aType, const QTime& aTime);
+    QMatrix4x4 nodeMatrix(NodeType aType, const QSize& aSize,
         const QTime& aTime);
 
-    QString id() const { return iId; }
+    const QString id() const { return iId; }
 
     // Utilities
     static QSGGeometry* rectGeometry(const QRectF& aRect);
@@ -111,7 +114,7 @@ protected:
     ClockRenderer(QString aId) : iId(aId) {}
 
 private:
-    QString iId;
+    const QString iId;
 };
 
 inline QSGNode* ClockRenderer::circleNode(const QPointF& aCenter,

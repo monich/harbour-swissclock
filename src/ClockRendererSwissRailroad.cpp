@@ -43,6 +43,7 @@ class SwissRailroad : public ClockRenderer
 public:
     SwissRailroad();
 
+    qreal nodeAngle(NodeType aType, const QTime& aTime) Q_DECL_OVERRIDE;
     void paintDialPlate(QPainter* aPainter, const QSize& aSize,
         ClockTheme* aTheme, bool aDrawBackground) Q_DECL_OVERRIDE;
     void paintHourMinHands(QPainter* aPainter, const QSize& aSize,
@@ -78,6 +79,26 @@ SwissRailroad::SwissRailroad() :
     iBlack(Qt::black),
     iWhite(Qt::white)
 {
+}
+
+qreal
+SwissRailroad::nodeAngle(
+    NodeType aType,
+    const QTime& aTime)
+{
+    if (aType == NodeSec) {
+        // It takes about 58.5 seconds to circle the face; then the hand
+        // pauses briefly at the top of the clock
+        const int fullCircleTime= 58500;
+        const int msec = aTime.second() * 1000 + aTime.msec();
+        if (msec <= fullCircleTime) {
+            return (360.0 * msec)/fullCircleTime;
+        } else {
+            return 0.0;
+        }
+    } else {
+        return ClockRenderer::nodeAngle(aType, aTime);
+    }
 }
 
 void
