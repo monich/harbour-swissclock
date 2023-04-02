@@ -34,7 +34,7 @@
 #include "ClockRenderer.h"
 #include "ClockDebug.h"
 
-#include <math.h>
+#include <qmath.h>
 
 const QString ClockRenderer::SWISS_RAILROAD("SwissRailroad");
 
@@ -114,6 +114,9 @@ SwissRailroad::nodeAngle(
         } else {
             return 0.0;
         }
+    } else if (aType == NodeMin && aTime.second() == 0) {
+        const qreal x = aTime.msec()/222.0;
+        return 6*(aTime.minute() - qExp(-1.5 * x) * qCos(2 * M_PI * x));
     } else {
         return ClockRenderer::nodeAngle(aType, aTime);
     }
