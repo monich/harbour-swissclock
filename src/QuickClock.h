@@ -1,6 +1,6 @@
 /*
+ * Copyright (C) 2014-2023 Slava Monich <slava@monich.com>
  * Copyright (C) 2014-2016 Jolla Ltd.
- * Contact: Slava Monich <slava.monich@jolla.com>
  *
  * You may use this file under the terms of the BSD license as follows:
  *
@@ -8,15 +8,15 @@
  * modification, are permitted provided that the following conditions
  * are met:
  *
- *   - Redistributions of source code must retain the above copyright
- *     notice, this list of conditions and the following disclaimer.
- *   - Redistributions in binary form must reproduce the above copyright
- *     notice, this list of conditions and the following disclaimer in
- *     the documentation and/or other materials provided with the
- *     distribution.
- *   - Neither the name of Jolla Ltd nor the names of its contributors
- *     may be used to endorse or promote products derived from this
- *     software without specific prior written permission.
+ *   1. Redistributions of source code must retain the above copyright
+ *      notice, this list of conditions and the following disclaimer.
+ *   2. Redistributions in binary form must reproduce the above copyright
+ *      notice, this list of conditions and the following disclaimer in
+ *      the documentation and/or other materials provided with the
+ *      distribution.
+ *   3. Neither the names of the copyright holders nor the names of its
+ *      contributors may be used to endorse or promote products derived
+ *      from this software without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
@@ -41,6 +41,7 @@
 
 #include "HarbourSystemState.h"
 
+#include <QBasicTimer>
 #include <QQuickPaintedItem>
 #include <QDateTime>
 #include <QPainter>
@@ -59,23 +60,23 @@ class QuickClock: public QQuickPaintedItem
     Q_PROPERTY(QString style READ style WRITE setStyle NOTIFY styleChanged)
 
 public:
-    explicit QuickClock(QQuickItem* aParent = NULL);
+    explicit QuickClock(QQuickItem* aParent = Q_NULLPTR);
     ~QuickClock();
 
     bool invertColors() const;
-    void setInvertColors(bool aValue);
+    void setInvertColors(bool);
 
     bool drawBackground() const;
-    void setDrawBackground(bool aValue);
+    void setDrawBackground(bool);
 
     bool running() const;
-    void setRunning(bool aRunning);
+    void setRunning(bool);
 
     int renderType() const;
-    void setRenderType(int aValue);
+    void setRenderType(int);
 
     QString style() const;
-    void setStyle(QString aValue);
+    void setStyle(QString);
 
     bool updatesEnabled() const;
     int minUpdateInterval() const;
@@ -100,16 +101,15 @@ private Q_SLOTS:
     void onUpdated();
 
 protected:
-    virtual void paint(QPainter* aPainter);
-    virtual void timerEvent(QTimerEvent* aEvent);
+    virtual void paint(QPainter*);
+    virtual void timerEvent(QTimerEvent*);
 
 private:
     bool updateRenderingType();
-    void requestUpdate(bool aFullUpdate);
-    void paintDialPlatePixmap(const QSize& aSize);
-    void paintOffScreenNoSec(QPainter* aPainter, const QSize& aSize,
-         const QTime& aTime);
-    void repaintHourMin(const QSize& aSize, const QTime& aTime);
+    void requestUpdate(bool);
+    void paintDialPlatePixmap(const QSize&);
+    void paintOffScreenNoSec(QPainter*, const QSize&, const QTime&);
+    void repaintHourMin(const QSize&, const QTime&);
 
 private:
     CLOCK_PERFORMANCE_LOG_DEFINE
@@ -133,8 +133,6 @@ private:
     int iPaintHour;
     int iPaintMinute;
 };
-
-QML_DECLARE_TYPE(QuickClock)
 
 inline bool QuickClock::invertColors() const
     { return iInvertColors; }
