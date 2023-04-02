@@ -75,7 +75,7 @@ Page {
                 description: applicationName ?
                     //: Settings page header description (app version)
                     //% "Version %1"
-                    qsTrId("swissclock-settings-version").arg("1.0.9") : ""
+                    qsTrId("swissclock-settings-version").arg("1.0.10") : ""
 
                 Image {
                     id: appIcon
