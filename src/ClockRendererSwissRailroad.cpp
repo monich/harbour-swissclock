@@ -41,6 +41,9 @@ const QString ClockRenderer::SWISS_RAILROAD("SwissRailroad");
 class SwissRailroad : public ClockRenderer
 {
 public:
+    // It takes about 58.5 seconds to circle the face
+    enum { SECOND_HAND_FULL_CIRCLE_MS = 58500 };
+
     SwissRailroad();
 
     qreal nodeAngle(NodeType aType, const QTime& aTime) Q_DECL_OVERRIDE;
@@ -53,6 +56,7 @@ public:
     void initNode(QSGTransformNode* aTxNode, NodeType aType,
         QQuickWindow* aWindow, const QSizeF& aSize,
         ClockTheme* aTheme) Q_DECL_OVERRIDE;
+    int msecUntilNextUpdate(NodeType aType, const QTime& aTime) Q_DECL_OVERRIDE;
 
     void initHour(QSGTransformNode*, const QSizeF&, ClockTheme*);
     void initMin(QSGTransformNode*, const QSizeF&, ClockTheme*);
@@ -81,6 +85,21 @@ SwissRailroad::SwissRailroad() :
 {
 }
 
+int
+SwissRailroad::msecUntilNextUpdate(
+    NodeType aType,
+    const QTime& aTime)
+{
+    if (aType == NodeSec) {
+        const int msec = aTime.second() * 1000 + aTime.msec();
+        return (msec > SECOND_HAND_FULL_CIRCLE_MS) ?
+            qMax(60000 - msec, QUICK_CLOCK_MIN_UPDATE_INTERVAL) :
+            QUICK_CLOCK_MIN_UPDATE_INTERVAL;
+    } else {
+        return ClockRenderer::msecUntilNextUpdate(aType, aTime);
+    }
+}
+
 qreal
 SwissRailroad::nodeAngle(
     NodeType aType,
@@ -89,10 +108,9 @@ SwissRailroad::nodeAngle(
     if (aType == NodeSec) {
         // It takes about 58.5 seconds to circle the face; then the hand
         // pauses briefly at the top of the clock
-        const int fullCircleTime= 58500;
         const int msec = aTime.second() * 1000 + aTime.msec();
-        if (msec <= fullCircleTime) {
-            return (360.0 * msec)/fullCircleTime;
+        if (msec <= SECOND_HAND_FULL_CIRCLE_MS) {
+            return (360.0 * msec)/SECOND_HAND_FULL_CIRCLE_MS;
         } else {
             return 0.0;
         }

@@ -77,7 +77,7 @@ public:
     // Optimized interface
     virtual void initNode(QSGTransformNode* aTxNode, NodeType aType,
         QQuickWindow* aWindow, const QSizeF& aSize, ClockTheme* aTheme) = 0;
-    int msecUntilNextUpdate(NodeType aType, const QTime& aTime);
+    virtual int msecUntilNextUpdate(NodeType aType, const QTime& aTime);
     QMatrix4x4 nodeMatrix(NodeType aType, const QSize& aSize,
         const QTime& aTime);
 
