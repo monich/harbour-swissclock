@@ -26,6 +26,21 @@ BuildRequires: qt5-qttools-linguist
 %description
 Fancy clock for Sailfish OS
 
+%if "%{?vendor}" == "chum"
+Categories:
+ - Utility
+Icon: https://raw.githubusercontent.com/monich/harbour-swissclock/master/icons/harbour-swissclock.svg
+Screenshots:
+- https://home.monich.net/chum/openrepos-swissclock/screenshots/screenshot-001.png
+- https://home.monich.net/chum/openrepos-swissclock/screenshots/screenshot-002.png
+- https://home.monich.net/chum/openrepos-swissclock/screenshots/screenshot-003.png
+- https://home.monich.net/chum/openrepos-swissclock/screenshots/screenshot-004.png
+- https://home.monich.net/chum/openrepos-swissclock/screenshots/screenshot-005.png
+- https://home.monich.net/chum/openrepos-swissclock/screenshots/screenshot-006.png
+Url:
+  Homepage: https://openrepos.net/content/slava/swiss-clock
+%endif
+
 %prep
 %setup -q -n %{name}-%{version}
 
@@ -50,40 +65,3 @@ desktop-file-install --delete-original \
 %{_datadir}/icons/hicolor/*/apps/%{name}.png
 %{_datadir}/translations/%{name}*.qm
 %{_datadir}/jolla-settings/entries/%{name}.json
-
-%changelog
-* Tue Jul 27 2021 Slava Monich <slava@monich.com> 1.0.9
-- Added Swedish translation
-- Integration with My Backup
-
-* Tue Jul 27 2021 Slava Monich <slava.monich@jolla.com> 1.0.8
-- Added Hungarian translation
-- Added Dutch translation
-- Fixed aarch64 build
-
-* Sat Dec 24 2016 Slava Monich <slava.monich@jolla.com> 1.0.7
-- Added settings option for dial plate background
-
-* Tue Oct 04 2016 Slava Monich <slava.monich@jolla.com> 1.0.6
-- Added support for landscape and made it default on tablet
-- Added settings plugin
-
-* Sun Oct 02 2016 Slava Monich <slava.monich@jolla.com> 1.0.5
-- Vectorized some rendering, now it's usable on hires devices
-
-* Sun May 03 2015 Slava Monich <slava.monich@jolla.com> 1.0.4
-- Added Deutsche Bahn clock
-
-* Sun Jan 04 2015 Slava Monich <slava.monich@jolla.com> 1.0.3
-- Rendering optimization
-
-* Sun Oct 26 2014 Slava Monich <slava.monich@jolla.com> 1.0.2
-- Store settings in dconf
-- Fixed a problem with the minute hand being a bit too blurry
-- Added Helsinki metro clock
-
-* Fri Jun 27 2014 Slava Monich <slava.monich@jolla.com> 1.0.1
-- Fixed corrupted background (hopefully)
-
-* Fri Jun 13 2014 Slava Monich <slava.monich@jolla.com> 1.0.0
-- Initial version
