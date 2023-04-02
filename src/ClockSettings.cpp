@@ -1,6 +1,6 @@
 /*
+ * Copyright (C) 2014-2023 Slava Monich <slava@monich.com>
  * Copyright (C) 2014-2016 Jolla Ltd.
- * Contact: Slava Monich <slava.monich@jolla.com>
  *
  * You may use this file under the terms of the BSD license as follows:
  *
@@ -8,15 +8,15 @@
  * modification, are permitted provided that the following conditions
  * are met:
  *
- *   - Redistributions of source code must retain the above copyright
- *     notice, this list of conditions and the following disclaimer.
- *   - Redistributions in binary form must reproduce the above copyright
- *     notice, this list of conditions and the following disclaimer in
- *     the documentation and/or other materials provided with the
- *     distribution.
- *   - Neither the name of Jolla Ltd nor the names of its contributors
- *     may be used to endorse or promote products derived from this
- *     software without specific prior written permission.
+ *   1. Redistributions of source code must retain the above copyright
+ *      notice, this list of conditions and the following disclaimer.
+ *   2. Redistributions in binary form must reproduce the above copyright
+ *      notice, this list of conditions and the following disclaimer in
+ *      the documentation and/or other materials provided with the
+ *      distribution.
+ *   3. Neither the names of the copyright holders nor the names of its
+ *      contributors may be used to endorse or promote products derived
+ *      from this software without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
@@ -39,22 +39,29 @@
 
 #define SETTINGS_GROUP          "Configuration/"
 #define DCONF_PATH              "/apps/" CLOCK_APP_NAME "/"
+#define DCONF_(x)               DCONF_PATH x
+
 #define KEY_SHOW_NUMBERS        "showNumbers"
 #define KEY_INVERT_COLORS       "invertColors"
+#define KEY_KEEP_DISPLAY_ON     "keepDisplayOn"
 #define KEY_CLOCK_STYLE         "clockStyle"
 #define KEY_RENDER_TYPE         "renderType"
 #define KEY_ORIENTATION         "orientation"
+
+#define DEFAULT_KEEP_DISPLAY_ON false
+#define DEFAULT_ORIENTATION     ClockSettings::OrientationPrimary
 
 #define SETTINGS_SHOW_NUMBERS   SETTINGS_GROUP KEY_SHOW_NUMBERS
 #define SETTINGS_INVERT_COLORS  SETTINGS_GROUP KEY_INVERT_COLORS
 
 ClockSettings::ClockSettings(QObject* aParent) :
     QObject(aParent),
-    iShowNumbers(new MGConfItem(DCONF_PATH KEY_SHOW_NUMBERS, this)),
-    iInvertColors(new MGConfItem(DCONF_PATH KEY_INVERT_COLORS, this)),
-    iClockStyle(new MGConfItem(DCONF_PATH KEY_CLOCK_STYLE, this)),
-    iRenderType(new MGConfItem(DCONF_PATH KEY_RENDER_TYPE, this)),
-    iOrientation(new MGConfItem(DCONF_PATH KEY_ORIENTATION, this))
+    iShowNumbers(new MGConfItem(DCONF_(KEY_SHOW_NUMBERS), this)),
+    iInvertColors(new MGConfItem(DCONF_(KEY_INVERT_COLORS), this)),
+    iKeepDisplayOn(new MGConfItem(DCONF_(KEY_KEEP_DISPLAY_ON), this)),
+    iClockStyle(new MGConfItem(DCONF_(KEY_CLOCK_STYLE), this)),
+    iRenderType(new MGConfItem(DCONF_(KEY_RENDER_TYPE), this)),
+    iOrientation(new MGConfItem(DCONF_(KEY_ORIENTATION), this))
 {
     QTRACE("- created");
 
@@ -76,6 +83,7 @@ ClockSettings::ClockSettings(QObject* aParent) :
 
     connect(iShowNumbers, SIGNAL(valueChanged()), SIGNAL(showNumbersChanged()));
     connect(iInvertColors, SIGNAL(valueChanged()), SIGNAL(invertColorsChanged()));
+    connect(iKeepDisplayOn, SIGNAL(valueChanged()), SIGNAL(keepDisplayOnChanged()));
     connect(iClockStyle, SIGNAL(valueChanged()), SIGNAL(clockStyleChanged()));
     connect(iRenderType, SIGNAL(valueChanged()), SIGNAL(renderTypeChanged()));
     connect(iOrientation, SIGNAL(valueChanged()), SIGNAL(orientationChanged()));
@@ -86,22 +94,41 @@ ClockSettings::~ClockSettings()
     QTRACE("- destroyed");
 }
 
-bool ClockSettings::showNumbers() const
+// Callback for qmlRegisterSingletonType<ClockSettings>
+QObject*
+ClockSettings::createSingleton(
+    QQmlEngine*,
+    QJSEngine*)
+{
+    return new ClockSettings;
+}
+
+bool
+ClockSettings::showNumbers() const
 {
     return iShowNumbers->value(DEFAULT_SHOW_NUMBERS).toBool();
 }
 
-bool ClockSettings::invertColors() const
+bool
+ClockSettings::invertColors() const
 {
     return iInvertColors->value(DEFAULT_INVERT_COLORS).toBool();
 }
 
-QString ClockSettings::clockStyle() const
+bool
+ClockSettings::keepDisplayOn() const
+{
+    return iKeepDisplayOn->value(DEFAULT_KEEP_DISPLAY_ON).toBool();
+}
+
+QString
+ClockSettings::clockStyle() const
 {
     return iClockStyle->value(DEFAULT_CLOCK_STYLE).toString();
 }
 
-ClockSettings::RenderType ClockSettings::renderType() const
+ClockSettings::RenderType
+ClockSettings::renderType() const
 {
     // Need to cast int to enum right away to force "enumeration value not
     // handled in switch" warning if we miss one of the values:
@@ -116,7 +143,8 @@ ClockSettings::RenderType ClockSettings::renderType() const
     return DEFAULT_RENDER_TYPE;
 }
 
-ClockSettings::Orientation ClockSettings::orientation() const
+ClockSettings::Orientation
+ClockSettings::orientation() const
 {
     // Need to cast int to enum right away to force "enumeration value not
     // handled in switch" warning if we miss one of the Orientation:
@@ -134,19 +162,33 @@ ClockSettings::Orientation ClockSettings::orientation() const
     return DEFAULT_ORIENTATION;
 }
 
-void ClockSettings::setShowNumbers(bool aValue)
+void
+ClockSettings::setShowNumbers(
+    bool aValue)
 {
     QTRACE("-" << KEY_SHOW_NUMBERS << "=" << aValue);
     iShowNumbers->set(aValue);
 }
 
-void ClockSettings::setInvertColors(bool aValue)
+void
+ClockSettings::setInvertColors(
+    bool aValue)
 {
     QTRACE("-" << KEY_INVERT_COLORS << "=" << aValue);
     iInvertColors->set(aValue);
 }
 
-void ClockSettings::setClockStyle(QString aValue)
+void
+ClockSettings::setKeepDisplayOn(
+    bool aValue)
+{
+    QTRACE("-" << KEY_KEEP_DISPLAY_ON << "=" << aValue);
+    iKeepDisplayOn->set(aValue);
+}
+
+void
+ClockSettings::setClockStyle(
+    QString aValue)
 {
     QTRACE("-" << KEY_CLOCK_STYLE << "=" << aValue);
     iClockStyle->set(aValue);

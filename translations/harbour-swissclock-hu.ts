@@ -78,5 +78,15 @@
         <extracomment>Text switch description</extracomment>
         <translation>Ha engedélyezve van, mind az elsődleges, mind a fordított fekvő vagy álló tájolást lehetővé teszi.</translation>
     </message>
+    <message id="swissclock-settings-keep_display_on-text">
+        <source>Keep display on when running full screen</source>
+        <extracomment>Text switch label</extracomment>
+        <translation type="unfinished">Tartsa bekapcsolva a kijelzőt teljes képernyős üzemmódban</translation>
+    </message>
+    <message id="swissclock-settings-keep_display_on-description">
+        <source>To avoid completely discharging the battery, display blanking would still be allowed if the battery level drops below %1% and the phone is not on charger.</source>
+        <extracomment>Text switch label description</extracomment>
+        <translation type="unfinished">Az akkumulátor teljes lemerülésének elkerülése érdekében a kijelző sötétítése továbbra is megengedett, ha az akkumulátor töltöttségi szintje %1% alá esik, és a telefon nem töltődik.</translation>
+    </message>
 </context>
 </TS>

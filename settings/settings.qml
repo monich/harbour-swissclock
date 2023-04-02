@@ -65,6 +65,7 @@ Page {
 
         Column {
             id: content
+
             width: parent.width
 
             PageHeader {
@@ -94,6 +95,7 @@ Page {
 
             ComboBox {
                 id: invertColorsComboBox
+
                 //: Combo box label
                 //% "Dial plate"
                 label: qsTrId("swissclock-settings-dial_plate")
@@ -102,6 +104,7 @@ Page {
                 description: qsTrId("swissclock-settings-dial_plate-description")
                 menu: ContextMenu {
                     id: invertColorsMenu
+
                     readonly property int defaultIndex: 0
                     MenuItem {
                         //: Combo box value for the normal (light) dial plate
@@ -147,12 +150,14 @@ Page {
 
             ComboBox {
                 id: orientationComboBox
+
                 //: Combo box label
                 //% "Orientation"
                 label: qsTrId("swissclock-settings-orientation_label")
                 value: currentItem ? currentItem.text : ""
                 menu: ContextMenu {
                     id: orientationMenu
+
                     readonly property int defaultIndex: 0
                     MenuItem {
                         //: Combo box value for primary orientation
@@ -197,8 +202,10 @@ Page {
                 }
                 onCurrentItemChanged: orientation.updateValue()
             }
+
             TextSwitch {
                 id: orientationInvertSwitch
+
                 //: Text switch label
                 //% "Allow inverted orientation"
                 text: qsTrId("swissclock-settings-orientation-allow_inverted")
@@ -207,8 +214,10 @@ Page {
                 description: qsTrId("swissclock-settings-orientation-allow_inverted-description")
                 onCheckedChanged: orientation.updateValue()
             }
+
             ConfigurationValue {
                 id: orientation
+
                 key: rootPath + "orientation"
                 defaultValue: 0
                 onValueChanged: updateControls()
@@ -239,6 +248,28 @@ Page {
                             orientationInvertSwitch.enabled = true
                         }
                     }
+                }
+            }
+
+            // Note: Battery level logic requires mce 1.86.0 (Sailfish OS 2.1)
+            // Ideally, this option should be hidden on earlier versions of Sailfish OS
+            TextSwitch {
+                width: parent.width
+                automaticCheck: false
+                checked: keepDisplayOn.value
+                //: Text switch label
+                //% "Keep display on when running full screen"
+                text: qsTrId("swissclock-settings-keep_display_on-text")
+                //: Text switch label description
+                //% "To avoid completely discharging the battery, display blanking would still be allowed if the battery level drops below %1% and the phone is not on charger."
+                description: qsTrId("swissclock-settings-keep_display_on-description").arg(20)
+                onClicked: keepDisplayOn.value = !keepDisplayOn.value
+
+                ConfigurationValue {
+                    id: keepDisplayOn
+
+                    key: rootPath + "keepDisplayOn"
+                    defaultValue: false
                 }
             }
         }

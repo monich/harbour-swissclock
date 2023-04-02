@@ -48,11 +48,17 @@ HARBOUR_LIB = $${_PRO_FILE_PWD_}/harbour-lib
 HARBOUR_SRC = $${HARBOUR_LIB}/src
 HARBOUR_INCLUDE = $${HARBOUR_LIB}/include
 INCLUDEPATH += $${HARBOUR_INCLUDE}
+
 SOURCES += \
+    $${HARBOUR_SRC}/HarbourBattery.cpp \
+    $${HARBOUR_SRC}/HarbourDisplayBlanking.cpp \
     $${HARBOUR_SRC}/HarbourMce.cpp \
     $${HARBOUR_SRC}/HarbourSystemState.cpp
+
 HEADERS += \
+    $${HARBOUR_INCLUDE}/HarbourBattery.h \
     $${HARBOUR_INCLUDE}/HarbourDebug.h \
+    $${HARBOUR_INCLUDE}/HarbourDisplayBlanking.h \
     $${HARBOUR_INCLUDE}/HarbourSystemState.h \
     $${HARBOUR_SRC}/HarbourMce.h
 

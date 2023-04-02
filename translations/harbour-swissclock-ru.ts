@@ -78,5 +78,15 @@
         <extracomment>Text switch description</extracomment>
         <translation>Разрешает как основную, так и обратную портретную или альбомную ориентацию</translation>
     </message>
+    <message id="swissclock-settings-keep_display_on-text">
+        <source>Keep display on when running full screen</source>
+        <extracomment>Text switch label</extracomment>
+        <translation>Не выключать дисплей в полноэкранном режиме</translation>
+    </message>
+    <message id="swissclock-settings-keep_display_on-description">
+        <source>To avoid completely discharging the battery, display blanking would still be allowed if the battery level drops below %1% and the phone is not on charger.</source>
+        <extracomment>Text switch label description</extracomment>
+        <translation>Во избежание полной разрядки аккумулятора, спящий режим всё равно будет разрешён если заряд аккумулятора упадёт ниже %1% и при этом зарядное устройство не подключено.</translation>
+    </message>
 </context>
 </TS>

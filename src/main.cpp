@@ -1,6 +1,6 @@
 /*
+ * Copyright (C) 2014-2023 Slava Monich <slava@monich.com>
  * Copyright (C) 2014-2016 Jolla Ltd.
- * Contact: Slava Monich <slava.monich@jolla.com>
  *
  * You may use this file under the terms of the BSD license as follows:
  *
@@ -8,15 +8,15 @@
  * modification, are permitted provided that the following conditions
  * are met:
  *
- *   - Redistributions of source code must retain the above copyright
- *     notice, this list of conditions and the following disclaimer.
- *   - Redistributions in binary form must reproduce the above copyright
- *     notice, this list of conditions and the following disclaimer in
- *     the documentation and/or other materials provided with the
- *     distribution.
- *   - Neither the name of Jolla Ltd nor the names of its contributors
- *     may be used to endorse or promote products derived from this
- *     software without specific prior written permission.
+ *   1. Redistributions of source code must retain the above copyright
+ *      notice, this list of conditions and the following disclaimer.
+ *   2. Redistributions in binary form must reproduce the above copyright
+ *      notice, this list of conditions and the following disclaimer in
+ *      the documentation and/or other materials provided with the
+ *      distribution.
+ *   3. Neither the names of the copyright holders nor the names of its
+ *      contributors may be used to endorse or promote products derived
+ *      from this software without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
@@ -35,14 +35,24 @@
 #include "ClockSettings.h"
 #include "ClockDebug.h"
 
+#include "HarbourBattery.h"
+#include "HarbourDisplayBlanking.h"
+
 #include <QtGui>
 #include <QtQuick>
 #include <sailfishapp.h>
 
+#define REGISTER_SINGLETON(class,uri,v1,v2) \
+    qmlRegisterSingletonType<class>(uri, v1, v2, #class, class::createSingleton)
+#define REGISTER_TYPE(class,uri,v1,v2) \
+    qmlRegisterType<class>(uri, v1, v2, #class)
+
 void registerClockTypes(const char* uri, int v1 = 1, int v2 = 0)
 {
     qmlRegisterType<QuickClock>(uri, v1, v2, "Clock");
-    qmlRegisterType<ClockSettings>(uri, v1, v2, "ClockSettings");
+    REGISTER_SINGLETON(ClockSettings, uri, v1, v2);
+    REGISTER_SINGLETON(HarbourBattery, uri, v1, v2);
+    REGISTER_TYPE(HarbourDisplayBlanking, uri, v1, v2);
 }
 
 Q_DECL_EXPORT int main(int argc, char *argv[])

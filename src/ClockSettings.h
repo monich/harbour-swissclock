@@ -1,6 +1,6 @@
 /*
+ * Copyright (C) 2014-2023 Slava Monich <slava@monich.com>
  * Copyright (C) 2014-2016 Jolla Ltd.
- * Contact: Slava Monich <slava.monich@jolla.com>
  *
  * You may use this file under the terms of the BSD license as follows:
  *
@@ -8,15 +8,15 @@
  * modification, are permitted provided that the following conditions
  * are met:
  *
- *   - Redistributions of source code must retain the above copyright
- *     notice, this list of conditions and the following disclaimer.
- *   - Redistributions in binary form must reproduce the above copyright
- *     notice, this list of conditions and the following disclaimer in
- *     the documentation and/or other materials provided with the
- *     distribution.
- *   - Neither the name of Jolla Ltd nor the names of its contributors
- *     may be used to endorse or promote products derived from this
- *     software without specific prior written permission.
+ *   1. Redistributions of source code must retain the above copyright
+ *      notice, this list of conditions and the following disclaimer.
+ *   2. Redistributions in binary form must reproduce the above copyright
+ *      notice, this list of conditions and the following disclaimer in
+ *      the documentation and/or other materials provided with the
+ *      distribution.
+ *   3. Neither the names of the copyright holders nor the names of its
+ *      contributors may be used to endorse or promote products derived
+ *      from this software without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
@@ -34,7 +34,7 @@
 #ifndef CLOCK_SETTINGS_H
 #define CLOCK_SETTINGS_H
 
-#include <QtQml>
+#include <QObject>
 
 #include "ClockRenderer.h"
 
@@ -48,8 +48,9 @@
 #define DEFAULT_INVERT_COLORS       false
 #define DEFAULT_CLOCK_STYLE         ClockRenderer::SWISS_RAILROAD
 #define DEFAULT_RENDER_TYPE         ClockSettings::RenderAuto
-#define DEFAULT_ORIENTATION         ClockSettings::OrientationPrimary
 
+class QQmlEngine;
+class QJSEngine;
 class MGConfItem;
 
 class ClockSettings : public QObject
@@ -65,6 +66,10 @@ class ClockSettings : public QObject
                READ invertColors
                WRITE setInvertColors
                NOTIFY invertColorsChanged)
+    Q_PROPERTY(bool keepDisplayOn
+               READ keepDisplayOn
+               WRITE setKeepDisplayOn
+               NOTIFY keepDisplayOnChanged)
     Q_PROPERTY(QString clockStyle
                READ clockStyle
                WRITE setClockStyle
@@ -92,22 +97,28 @@ public:
         OrientationAny
     };
 
-    explicit ClockSettings(QObject* aParent = NULL);
+    explicit ClockSettings(QObject* aParent = Q_NULLPTR);
     ~ClockSettings();
+
+    // Callback for qmlRegisterSingletonType<ClockSettings>
+    static QObject* createSingleton(QQmlEngine*, QJSEngine*);
 
     bool showNumbers() const;
     bool invertColors() const;
+    bool keepDisplayOn() const;
     QString clockStyle() const;
     RenderType renderType() const;
     Orientation orientation() const;
 
-    void setShowNumbers(bool aValue);
-    void setInvertColors(bool aValue);
-    void setClockStyle(QString aValue);
+    void setShowNumbers(bool);
+    void setInvertColors(bool);
+    void setKeepDisplayOn(bool);
+    void setClockStyle(QString);
 
 signals:
     void showNumbersChanged();
     void invertColorsChanged();
+    void keepDisplayOnChanged();
     void clockStyleChanged();
     void renderTypeChanged();
     void orientationChanged();
@@ -115,11 +126,10 @@ signals:
 private:
     MGConfItem* iShowNumbers;
     MGConfItem* iInvertColors;
+    MGConfItem* iKeepDisplayOn;
     MGConfItem* iClockStyle;
     MGConfItem* iRenderType;
     MGConfItem* iOrientation;
 };
-
-QML_DECLARE_TYPE(ClockSettings)
 
 #endif // CLOCK_SETTINGS_H

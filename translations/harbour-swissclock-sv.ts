@@ -78,5 +78,15 @@
         <extracomment>Text switch description</extracomment>
         <translation>Vid aktivering, tillåts både primär och omvänd liggande eller stående orientering.</translation>
     </message>
+    <message id="swissclock-settings-keep_display_on-text">
+        <source>Keep display on when running full screen</source>
+        <extracomment>Text switch label</extracomment>
+        <translation type="unfinished">Håll displayen på när du kör helskärm</translation>
+    </message>
+    <message id="swissclock-settings-keep_display_on-description">
+        <source>To avoid completely discharging the battery, display blanking would still be allowed if the battery level drops below %1% and the phone is not on charger.</source>
+        <extracomment>Text switch label description</extracomment>
+        <translation type="unfinished">För att undvika att batteriet laddas ur helt skulle skärmsläckning fortfarande tillåtas om batterinivån sjunker under %1% och telefonen inte laddas.</translation>
+    </message>
 </context>
 </TS>

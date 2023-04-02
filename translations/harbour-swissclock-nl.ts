@@ -78,5 +78,15 @@
         <extracomment>Text switch description</extracomment>
         <translation>Indien ingeschakeld worden zowel primaire als omgekeerde landschaps- of portretoriëntaties toegestaan</translation>
     </message>
+    <message id="swissclock-settings-keep_display_on-text">
+        <source>Keep display on when running full screen</source>
+        <extracomment>Text switch label</extracomment>
+        <translation type="unfinished">Houd het display aan wanneer u op volledig scherm werkt</translation>
+    </message>
+    <message id="swissclock-settings-keep_display_on-description">
+        <source>To avoid completely discharging the battery, display blanking would still be allowed if the battery level drops below %1% and the phone is not on charger.</source>
+        <extracomment>Text switch label description</extracomment>
+        <translation type="unfinished">Om te voorkomen dat de batterij volledig wordt ontladen, is het leegmaken van het scherm nog steeds toegestaan als het batterijniveau onder %1% zakt en de telefoon niet op de oplader staat.</translation>
+    </message>
 </context>
 </TS>
