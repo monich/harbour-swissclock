@@ -18,10 +18,10 @@
         <extracomment>Label for Deutsche Bahn clock style</extracomment>
         <translation>Deutsche Bahn</translation>
     </message>
-    <message id="swissclock-settings-page_header">
-        <source>Swiss Clock</source>
-        <extracomment>Settings page header</extracomment>
-        <translation>Swiss Clock</translation>
+    <message id="swissclock-settings-version">
+        <source>Version %1</source>
+        <extracomment>Settings page header description (app version)</extracomment>
+        <translation>Version %1</translation>
     </message>
     <message id="swissclock-settings-dial_plate">
         <source>Dial plate</source>

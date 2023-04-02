@@ -1,6 +1,6 @@
 /*
+ * Copyright (C) 2016-2023 Slava Monich <slava@monich.com>
  * Copyright (C) 2016-2019 Jolla Ltd.
- * Copyright (C) 2016-2019 Slava Monich <slava@monich.com>
  *
  * You may use this file under the terms of the BSD license as follows:
  *
@@ -68,9 +68,28 @@ Page {
             width: parent.width
 
             PageHeader {
-                //: Settings page header
-                //% "Swiss Clock"
-                title: qsTrId("swissclock-settings-page_header")
+                id: pageHeader
+
+                rightMargin: Theme.horizontalPageMargin + (appIcon.visible ? (height - appIcon.padding) : 0)
+                title: applicationName ? applicationName : "Swiss Clock"
+                description: applicationName ?
+                    //: Settings page header description (app version)
+                    //% "Version %1"
+                    qsTrId("swissclock-settings-version").arg("1.0.9") : ""
+
+                Image {
+                    id: appIcon
+
+                    readonly property int padding: Theme.paddingLarge
+                    readonly property int size: pageHeader.height - 2 * padding
+                    x: pageHeader.width - width - Theme.horizontalPageMargin
+                    y: padding
+                    width: size
+                    height: size
+                    sourceSize: Qt.size(size,size)
+                    source: applicationIcon ? applicationIcon : ""
+                    visible: appIcon.status === Image.Ready
+                }
             }
 
             ComboBox {
