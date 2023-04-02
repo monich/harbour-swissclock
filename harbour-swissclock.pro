@@ -61,7 +61,7 @@ OTHER_FILES += \
     settings/*.qml \
     settings/harbour-$${NAME}.json \
     icons/harbour-$${NAME}.svg \
-    harbour-$${NAME}.desktop \
+    *.desktop \
     translations/*.ts \
     rpm/*-$${NAME}.spec
 
@@ -90,12 +90,6 @@ app_settings {
     settings_qml.files = settings/*.qml
     settings_qml.path = /usr/share/$${TARGET}/settings/
     INSTALLS += settings_qml settings_json
-}
-
-# Desktop file
-equals(PREFIX, "openrepos") {
-    desktop.extra = sed s/harbour/openrepos/g harbour-$${NAME}.desktop > $${TARGET}.desktop
-    desktop.CONFIG += no_check_exist
 }
 
 # Translations

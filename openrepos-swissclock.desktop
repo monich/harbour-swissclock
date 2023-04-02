@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+X-Nemo-Application-Type=silica-qt5
+Name=Swiss Clock
+Icon=openrepos-swissclock
+Exec=openrepos-swissclock
+
+[X-Sailjail]
+Sandboxing=Disabled
+
+[X-HarbourBackup]
+BackupConfigList=/apps/openrepos-swissclock/
