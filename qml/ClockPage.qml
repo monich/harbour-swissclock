@@ -37,10 +37,11 @@ import harbour.swissclock 1.0
 
 Page {
     id: page
+
     allowedOrientations: window.allowedOrientations
-    property int initialIndex: 0
-    property bool ready: false
-    property var settings: ClockSettings
+
+    property int _initialIndex: 0
+    property bool _ready: false
 
     readonly property var clockModel: [
         {
@@ -62,17 +63,17 @@ Page {
     ]
 
     function clockAt(i) {
-        return clockModel[(i + initialIndex) % clockModel.length];
+        return clockModel[(i + _initialIndex) % clockModel.length];
     }
 
     Component.onCompleted: {
         for (var i=0; i<clockModel.length; i++) {
-            if (clockModel[i].style === settings.clockStyle) {
-                initialIndex += i
+            if (clockModel[i].style === ClockSettings.clockStyle) {
+                _initialIndex += i
                 break
             }
         }
-        ready = true
+        _ready = true
         slideshow.model = clockModel
         slideshow.forceActiveFocus()
         orientationReminder.restart()
@@ -82,15 +83,16 @@ Page {
 
     Timer {
         id: orientationReminder
+
         interval: 250
     }
 
     Connections {
-        target: settings
+        target: ClockSettings
         onClockStyleChanged: {
-            if (ready) {
+            if (_ready) {
                 for (var i=0; i<clockModel.length; i++) {
-                    if (clockAt(i).style === settings.clockStyle) {
+                    if (clockAt(i).style === ClockSettings.clockStyle) {
                         slideshow.currentIndex = i
                         break
                     }
@@ -101,34 +103,55 @@ Page {
 
     SlideshowView {
         id: slideshow
+
+        snapMode: PathView.SnapToItem
         anchors.fill: parent
         delegate: ClockDelegate {
             width: slideshow.itemWidth
             height: slideshow.height
             style: clockAt(index).style
             title: clockAt(index).title
-            flicking: slideshow.moving
+            flicking: slideshow.moving || flickSimulationTimer.running
             selected: index === slideshow.currentIndex
             landscape: page.isLandscape
             peekNumbers: orientationReminder.running
         }
         onCurrentIndexChanged: {
-            if (ready) {
-                settings.clockStyle = clockAt(currentIndex).style
+            if (_ready) {
+                ClockSettings.clockStyle = clockAt(currentIndex).style
             }
         }
-        Keys.onSelectPressed: {
+        Keys.onSelectPressed: defaultAction()
+        Keys.onReturnPressed: defaultAction()
+        Keys.onLeftPressed: {
+            flickSimulationTimer.restart()
+            decrementCurrentIndex()
+        }
+        Keys.onRightPressed: {
+            flickSimulationTimer.restart()
+            incrementCurrentIndex()
+        }
+
+        function defaultAction() {
             if (doubleClickTimer.running) {
                 doubleClickTimer.stop()     // Double click
-                settings.invertColors = !settings.invertColors
+                ClockSettings.invertColors = !ClockSettings.invertColors
             } else {
                 doubleClickTimer.start()    // Don't know yet
             }
         }
+
         Timer {
             id: doubleClickTimer
+
             interval: 500
-            onTriggered: settings.showNumbers = !settings.showNumbers // Single click
+            onTriggered: ClockSettings.showNumbers = !ClockSettings.showNumbers // Single click
+        }
+
+        Timer {
+            id: flickSimulationTimer
+
+            interval: 1000
         }
     }
 }
